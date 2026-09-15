@@ -8,7 +8,7 @@ Four services, all on free tiers:
 | Staff dashboard | Netlify | `apps/staff` (separate site) |
 | API | Render | `apps/api`, free web service |
 | Database | Neon | free Postgres |
-| Product images | Cloudflare R2 | 10 GB free |
+| Product images | Supabase Storage | 1 GB free, no card required |
 
 **Known free-tier limits:** Render's free service sleeps after ~15 minutes idle, so the
 first request after a quiet period takes ~50 seconds. Neon's free database also suspends
@@ -38,18 +38,21 @@ git push -u origin main
    `postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require`
 3. Keep it for the next step — it becomes `DATABASE_URL`.
 
-## 3. Image storage — Cloudflare R2
+## 3. Image storage — Supabase Storage
 
 Render's free disk is wiped on every restart, so uploaded product images must go to object storage.
 
-1. Cloudflare dashboard → R2 → create a bucket.
-2. Allow public access on the bucket and note its public URL.
-3. Create an R2 API token (Object Read & Write) → gives an access key id + secret.
-4. You'll need these values:
-   - `STORAGE_S3_ENDPOINT` → `https://<account-id>.r2.cloudflarestorage.com`
-   - `STORAGE_S3_BUCKET` → your bucket name
+1. [supabase.com](https://supabase.com) → New project (region: Frankfurt / `eu-central-1`).
+   Only Storage is used here — the database stays on Neon.
+2. **Storage** → New bucket → name `bms-media` → tick **Public bucket** → Save.
+3. **Project Settings → Storage → S3 Connection**: note the endpoint and region,
+   then **New access key** → copy the access key id + secret.
+4. Values for Render:
+   - `STORAGE_S3_ENDPOINT` → `https://<project-ref>.supabase.co/storage/v1/s3`
+   - `STORAGE_S3_REGION` → the project region shown there, e.g. `eu-central-1`
+   - `STORAGE_S3_BUCKET` → `bms-media`
    - `STORAGE_S3_ACCESS_KEY_ID` / `STORAGE_S3_SECRET_ACCESS_KEY`
-   - `STORAGE_S3_PUBLIC_BASE_URL` → the bucket's public URL
+   - `STORAGE_S3_PUBLIC_BASE_URL` → `https://<project-ref>.supabase.co/storage/v1/object/public/bms-media`
 
 ## 4. API — Render
 

@@ -60,20 +60,24 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false
 
-      # Product images/video — Render's disk is ephemeral on the free plan,
-      # so uploads must go to object storage (Cloudflare R2 has a free tier).
+      # Product images/video — Render's disk is ephemeral on the free plan, so
+      # uploads must go to object storage. Configured for Supabase Storage,
+      # which speaks S3 and has a free tier with no card required.
       - key: STORAGE_PROVIDER
         value: s3
+      # https://<project-ref>.supabase.co/storage/v1/s3
       - key: STORAGE_S3_ENDPOINT
         sync: false
+      # Must match the Supabase project's region, e.g. eu-central-1
       - key: STORAGE_S3_REGION
-        value: auto
+        sync: false
       - key: STORAGE_S3_BUCKET
         sync: false
       - key: STORAGE_S3_ACCESS_KEY_ID
         sync: false
       - key: STORAGE_S3_SECRET_ACCESS_KEY
         sync: false
+      # https://<project-ref>.supabase.co/storage/v1/object/public/<bucket>
       - key: STORAGE_S3_PUBLIC_BASE_URL
         sync: false
 

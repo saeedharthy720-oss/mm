@@ -12,6 +12,10 @@ export class S3StorageProvider implements StorageProvider {
     this.client = new S3Client({
       region: env.STORAGE_S3_REGION,
       endpoint: env.STORAGE_S3_ENDPOINT || undefined,
+      // S3-compatible providers (Supabase Storage, MinIO, and R2) serve buckets as
+      // a path segment rather than a subdomain of the endpoint. The AWS SDK
+      // defaults to virtual-hosted style, which those providers reject.
+      forcePathStyle: env.STORAGE_S3_FORCE_PATH_STYLE,
       credentials: {
         accessKeyId: env.STORAGE_S3_ACCESS_KEY_ID!,
         secretAccessKey: env.STORAGE_S3_SECRET_ACCESS_KEY!
