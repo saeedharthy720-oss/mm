@@ -17,8 +17,11 @@ services:
     # Migrations/seed run here rather than in preDeployCommand because that
     # field requires a paid instance type. `migrate deploy` only applies
     # committed migrations and never prompts; the seed is idempotent (upserts).
+    # --include=dev is required: NODE_ENV=production (set below, for runtime)
+    # would otherwise make npm skip devDependencies, and the build needs
+    # typescript, tsx and the prisma CLI from there.
     buildCommand: >-
-      npm install --prefix ../.. &&
+      npm install --include=dev --prefix ../.. &&
       npx prisma generate &&
       npx prisma migrate deploy &&
       npx prisma db seed &&
