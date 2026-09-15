@@ -7,6 +7,8 @@ const envSchema = z
     PORT: z.coerce.number().int().positive().default(4000),
 
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    // Unpooled connection used by Prisma migrations only (see prisma/schema.prisma).
+    DIRECT_URL: z.string().min(1, "DIRECT_URL is required"),
 
     JWT_ACCESS_SECRET: z.string().min(16, "JWT_ACCESS_SECRET must be at least 16 characters"),
     JWT_REFRESH_SECRET: z.string().min(16, "JWT_REFRESH_SECRET must be at least 16 characters"),

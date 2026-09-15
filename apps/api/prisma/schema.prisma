@@ -4,7 +4,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Pooled connection for normal queries.
   url      = env("DATABASE_URL")
+  // Migrations need an unpooled connection — PgBouncer (which Neon's -pooler
+  // endpoint uses) doesn't support the advisory locks migrations rely on.
+  // Locally (plain Docker Postgres, no pooler) just set this to the same value
+  // as DATABASE_URL; it must always be set.
+  directUrl = env("DIRECT_URL")
 }
 
 model Role {

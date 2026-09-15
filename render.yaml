@@ -31,8 +31,13 @@ services:
       - key: NODE_VERSION
         value: "20"
 
-      # Neon connection string (include ?sslmode=require).
+      # Neon POOLED connection string (host contains "-pooler").
       - key: DATABASE_URL
+        sync: false
+
+      # Neon DIRECT connection string — the same value with "-pooler" removed
+      # from the host. Prisma migrations fail through the pooler.
+      - key: DIRECT_URL
         sync: false
 
       # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
