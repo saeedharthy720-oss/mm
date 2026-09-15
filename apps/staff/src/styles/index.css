@@ -1,0 +1,55 @@
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Deep Industrial Navy & Trade Yellow */
+    --background: 40 10% 98%;
+    --foreground: 215 50% 15%;
+
+    --border: 215 20% 85%;
+    --input: 215 20% 85%;
+    --ring: 42 100% 50%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 50% 15%;
+    --card-border: 215 20% 90%;
+
+    --primary: 215 60% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 42 100% 50%;
+    --secondary-foreground: 215 60% 15%;
+
+    --muted: 215 20% 92%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 42 100% 50%;
+    --accent-foreground: 215 60% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 70% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --radius: 0.3rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+}

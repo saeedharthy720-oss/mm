@@ -1,0 +1,24 @@
+import { Router } from "express";
+import { PERMISSION_KEYS } from "../../config/constants.js";
+import { asyncHandler } from "../../middleware/asyncHandler.js";
+import { authenticate } from "../../middleware/authenticate.js";
+import { authorize } from "../../middleware/authorize.js";
+import { checkoutRateLimiter } from "../../middleware/rateLimit.js";
+import {
+  checkoutHandler,
+  getOrderHandler,
+  listOrdersHandler,
+  updateOrderStatusHandler
+} from "./orders.controller.js";
+
+export const ordersRouter = Router();
+
+ordersRouter.post("/", checkoutRateLimiter, asyncHandler(checkoutHandler));
+ordersRouter.get("/", authenticate, authorize(PERMISSION_KEYS.ORDERS_VIEW), asyncHandler(listOrdersHandler));
+ordersRouter.get("/:id", asyncHandler(getOrderHandler));
+ordersRouter.patch(
+  "/:id/status",
+  authenticate,
+  authorize(PERMISSION_KEYS.ORDERS_MANAGE),
+  asyncHandler(updateOrderStatusHandler)
+);

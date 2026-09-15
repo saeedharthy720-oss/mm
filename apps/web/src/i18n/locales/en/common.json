@@ -1,0 +1,87 @@
+{
+  "appName": "Building Materials Store",
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "searchPlaceholder": "Search materials...",
+    "search": "Search",
+    "cart": "Cart"
+  },
+  "footer": {
+    "contact": "Contact",
+    "help": "Need help?",
+    "helpBody": "Call or message us on WhatsApp and our team will help you place your order."
+  },
+  "home": {
+    "heroTitle": "Premium building materials for your next project",
+    "heroSubtitle": "A wide range of high-quality building materials, delivered fast and reliably to your site.",
+    "browseAll": "Browse all products",
+    "categories": "Shop by category",
+    "latestProducts": "Latest products"
+  },
+  "product": {
+    "noImage": "No image",
+    "outOfStock": "Out of stock",
+    "addToCart": "Add to cart",
+    "notFound": "Product not found.",
+    "backToListing": "← Back to products",
+    "sku": "SKU",
+    "deliveryCharge": "Delivery charge",
+    "cardAccepted": "Card payment accepted",
+    "codAccepted": "Pay on delivery available"
+  },
+  "products": {
+    "allCategories": "All categories",
+    "empty": "No products found.",
+    "emptyHint": "Try adjusting your search or category filter.",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{totalPages}}"
+  },
+  "cart": {
+    "empty": "Your cart is empty.",
+    "continueShopping": "Continue shopping",
+    "subtotal": "Subtotal",
+    "delivery": "Delivery",
+    "total": "Total",
+    "checkout": "Proceed to checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "yourDetails": "Your details",
+    "name": "Full name",
+    "phone": "Phone number",
+    "address": "Delivery address",
+    "pinLocation": "Pin your delivery location on the map (optional)",
+    "mapUnavailable": "Map unavailable right now — your typed address will be used for delivery.",
+    "mapLoading": "Loading map...",
+    "mapPinSet": "Pin set — this will be used for delivery.",
+    "mapPinHint": "Tap the map to drop a pin at your delivery location.",
+    "deliveryNotes": "Delivery notes (optional)",
+    "orderNotes": "Order notes (optional)",
+    "paymentMethod": "Payment method",
+    "noPaymentMethod": "These products don't share a common payment method — please order them separately.",
+    "card": "Card (pay online)",
+    "cod": "Pay on delivery",
+    "error": "Something went wrong placing your order. Please try again.",
+    "submitting": "Placing order...",
+    "placeOrder": "Place order",
+    "orderSummary": "Order summary"
+  },
+  "order": {
+    "notFound": "Order not found.",
+    "paymentSuccess": "Payment successful — thank you!",
+    "paymentCancelled": "Payment was cancelled. You can retry from your order or contact us.",
+    "thankYou": "Thank you for your order!",
+    "number": "Order number",
+    "status": "Status",
+    "paymentMethod": "Payment method",
+    "paymentStatus": "Payment status",
+    "items": "Items",
+    "deliverTo": "Deliver to",
+    "deliveryNotes": "Delivery notes"
+  },
+  "common": {
+    "delete": "Remove"
+  }
+}
