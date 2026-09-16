@@ -1,5 +1,13 @@
 # Deploying (free stack)
 
+## Live deployment
+
+| Part | URL |
+|---|---|
+| Storefront | https://bms-store.netlify.app |
+| Staff dashboard | https://bms-staff.netlify.app |
+| API | https://bms-api-5cgw.onrender.com |
+
 Four services, all on free tiers:
 
 | Part | Host | Notes |
@@ -101,6 +109,34 @@ Redeploy the API. **This step is required** — without it the browser blocks ev
 4. Place a pay-on-delivery order on the storefront → it appears in the staff order queue.
 
 ---
+
+## Troubleshooting
+
+**Netlify site asks you to log in to Netlify.** New projects are private by default.
+Project configuration → General → Visitor access → Edit visibility → set *Production
+visibility* to Public. Do this for the staff site too: it has its own login, and the
+Netlify-level lock would shut out employees who have no Netlify account.
+
+**Storefront or dashboard loads as a blank page.** Almost always `VITE_API_BASE_URL`.
+It is inlined into the JavaScript at build time, so it must be set *before* the build
+and a redeploy is required after changing it (Deploys → Trigger deploy → Clear cache
+and deploy site). Environment variables are per-site — setting them on one Netlify
+project does nothing for the other.
+
+To check what a deployed bundle actually received, without guessing:
+
+```bash
+curl -s https://YOUR-SITE.netlify.app/ | grep -o '/assets/index-[A-Za-z0-9_-]*\.js'
+curl -s https://YOUR-SITE.netlify.app/assets/index-XXXX.js | grep -o 'baseURL:[^,]*'
+```
+
+It should show the API URL. If it shows the literal string `VITE_API_BASE_URL`, the
+variable's *value* was filled in with its own name — a very easy slip in Netlify's
+two-box form, and one that produces a non-empty value, so the startup guard in
+`apiClient.ts` cannot catch it.
+
+**Every API call fails with a CORS error.** `CORS_ALLOWED_ORIGINS` on Render must list
+both Netlify URLs, comma-separated, with no spaces and no trailing slashes.
 
 ## Custom domain (optional)
 
