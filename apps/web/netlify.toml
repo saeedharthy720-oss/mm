@@ -3,7 +3,9 @@
 
 [build]
   base = "apps/web"
-  command = "npm install --prefix ../.. && npm run build"
+  # --include=dev: the build needs vite, typescript and tailwind, which are all
+  # devDependencies. Netlify skips those if NODE_ENV=production is ever set.
+  command = "npm install --include=dev --prefix ../.. && npm run build"
   publish = "dist"
 
 [build.environment]
