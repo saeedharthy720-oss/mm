@@ -108,7 +108,11 @@
     "notePlaceholder": "ملاحظة (اختياري)",
     "updating": "جارٍ التحديث...",
     "updateStatusButton": "تحديث الحالة",
-    "history": "سجل الحالات"
+    "history": "سجل الحالات",
+    "openWhatsAppWeb": "واتساب ويب",
+    "copyMessage": "نسخ الرسالة",
+    "messageCopied": "تم النسخ",
+    "previewMessage": "معاينة الرسالة"
   },
   "documents": {
     "print": "طباعة",

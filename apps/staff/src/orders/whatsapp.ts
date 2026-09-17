@@ -66,3 +66,12 @@ export function toInternationalPhone(phone: string, countryCode = DEFAULT_COUNTR
 export function buildWhatsAppUrl(phone: string, message: string): string {
   return `https://wa.me/${toInternationalPhone(phone)}?text=${encodeURIComponent(message)}`;
 }
+
+/**
+ * wa.me hands off to the installed desktop app, which on some machines leaves a
+ * blank page waiting forever. This goes straight to WhatsApp Web instead, which
+ * renders in the browser for anyone already signed in there.
+ */
+export function buildWhatsAppWebUrl(phone: string, message: string): string {
+  return `https://web.whatsapp.com/send?phone=${toInternationalPhone(phone)}&text=${encodeURIComponent(message)}`;
+}

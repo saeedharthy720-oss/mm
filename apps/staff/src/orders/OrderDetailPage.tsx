@@ -1,7 +1,10 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
+  Copy,
   FileText,
+  Globe,
   Loader2,
   MapPin,
   MessageCircle,
@@ -15,7 +18,7 @@ import { formatPrice } from "../lib/formatPrice.js";
 import { STATUS_COLORS } from "./OrdersPage.js";
 import { useOrder, useUpdateOrderStatus } from "./useOrder.js";
 import { useOrderStatuses } from "./useOrderStatuses.js";
-import { buildWhatsAppMessage, buildWhatsAppUrl } from "./whatsapp.js";
+import { buildWhatsAppMessage, buildWhatsAppUrl, buildWhatsAppWebUrl } from "./whatsapp.js";
 
 export function OrderDetailPage() {
   const { t, i18n } = useTranslation();
@@ -26,6 +29,7 @@ export function OrderDetailPage() {
   const updateStatus = useUpdateOrderStatus(id!);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [note, setNote] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const BackArrow = isArabic ? ArrowRight : ArrowLeft;
 
@@ -46,7 +50,19 @@ export function OrderDetailPage() {
       ? `https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}`
       : null;
 
-  const whatsappUrl = buildWhatsAppUrl(order.customerPhone, buildWhatsAppMessage(order, isArabic));
+  const whatsappMessage = buildWhatsAppMessage(order, isArabic);
+  const whatsappUrl = buildWhatsAppUrl(order.customerPhone, whatsappMessage);
+  const whatsappWebUrl = buildWhatsAppWebUrl(order.customerPhone, whatsappMessage);
+
+  async function copyMessage() {
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -106,15 +122,50 @@ export function OrderDetailPage() {
         </div>
       </div>
 
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex h-12 items-center justify-center gap-2 rounded-lg bg-[#25D366] font-bold text-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
-      >
-        <MessageCircle className="h-5 w-5" />
-        {t("orders.sendWhatsApp")}
-      </a>
+      <div className="space-y-2">
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 items-center justify-center gap-2 rounded-lg bg-[#25D366] font-bold text-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <MessageCircle className="h-5 w-5" />
+          {t("orders.sendWhatsApp")}
+        </a>
+
+        {/* wa.me depends on a hand-off to the desktop app that silently fails on
+            some machines, leaving a blank page. These two always work: WhatsApp
+            Web renders in the browser, and copying lets the message be pasted
+            anywhere at all. */}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <a
+            href={whatsappWebUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card text-sm font-medium transition-colors hover:bg-muted"
+          >
+            <Globe className="h-4 w-4" />
+            {t("orders.openWhatsAppWeb")}
+          </a>
+          <button
+            type="button"
+            onClick={copyMessage}
+            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card text-sm font-medium transition-colors hover:bg-muted"
+          >
+            {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+            {copied ? t("orders.messageCopied") : t("orders.copyMessage")}
+          </button>
+        </div>
+
+        <details className="rounded-lg border border-border bg-card px-3 py-2">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+            {t("orders.previewMessage")}
+          </summary>
+          <pre className="mt-2 whitespace-pre-wrap break-words text-xs text-muted-foreground">
+            {whatsappMessage}
+          </pre>
+        </details>
+      </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
         <Link

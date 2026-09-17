@@ -108,7 +108,11 @@
     "notePlaceholder": "Note (optional)",
     "updating": "Updating...",
     "updateStatusButton": "Update status",
-    "history": "Status history"
+    "history": "Status history",
+    "openWhatsAppWeb": "WhatsApp Web",
+    "copyMessage": "Copy message",
+    "messageCopied": "Copied",
+    "previewMessage": "Preview the message"
   },
   "documents": {
     "print": "Print",
