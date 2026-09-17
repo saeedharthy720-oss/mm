@@ -100,6 +100,10 @@ export function CheckoutPage() {
                   id="customerPhone"
                   required
                   type="tel"
+                  // A phone number is Latin digits plus "+", which the browser
+                  // reorders visually if the field inherits dir="rtl" from the
+                  // Arabic page — the customer sees the + jump to the far side.
+                  dir="ltr"
                   value={customerPhone}
                   onChange={(event) => setCustomerPhone(event.target.value)}
                   placeholder="+968XXXXXXXX"

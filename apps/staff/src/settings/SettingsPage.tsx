@@ -43,6 +43,7 @@ export function SettingsPage() {
           </label>
           <input
             id="storeNameEn"
+            dir="ltr"
             value={profile.nameEn}
             onChange={(event) => setProfile({ ...profile, nameEn: event.target.value })}
             className={fieldClass}
@@ -68,6 +69,8 @@ export function SettingsPage() {
           </label>
           <input
             id="whatsappNumber"
+            type="tel"
+            dir="ltr"
             value={profile.whatsappNumber}
             onChange={(event) => setProfile({ ...profile, whatsappNumber: event.target.value })}
             placeholder="+968XXXXXXXX"
@@ -81,6 +84,7 @@ export function SettingsPage() {
           </label>
           <input
             id="currency"
+            dir="ltr"
             value={profile.currency}
             onChange={(event) => setProfile({ ...profile, currency: event.target.value })}
             className={fieldClass}

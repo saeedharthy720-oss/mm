@@ -56,7 +56,7 @@ function CategoryForm({
     >
       <label className="text-xs text-muted-foreground">
         {t("categories.nameEn")}
-        <input value={nameEn} onChange={(e) => setNameEn(e.target.value)} required className={fieldClass} />
+        <input value={nameEn} onChange={(e) => setNameEn(e.target.value)} required dir="ltr" className={fieldClass} />
       </label>
       <label className="text-xs text-muted-foreground">
         {t("categories.nameAr")}

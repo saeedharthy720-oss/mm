@@ -138,6 +138,7 @@ export function ProductFormPage() {
               <label className={labelClass}>{t("products.nameEn")}</label>
               <input
                 required
+                dir="ltr"
                 value={form.nameEn}
                 onChange={(event) => update("nameEn", event.target.value)}
                 className={fieldClass}
@@ -157,6 +158,7 @@ export function ProductFormPage() {
               <label className={labelClass}>{t("products.sku")}</label>
               <input
                 required
+                dir="ltr"
                 value={form.sku}
                 onChange={(event) => update("sku", event.target.value)}
                 className={`${fieldClass} font-mono`}
@@ -215,6 +217,7 @@ export function ProductFormPage() {
                 type="number"
                 min="0"
                 step="0.001"
+                dir="ltr"
                 value={form.price}
                 onChange={(event) => update("price", event.target.value)}
                 className={fieldClass}
@@ -226,6 +229,7 @@ export function ProductFormPage() {
                 type="number"
                 min="0"
                 step="0.001"
+                dir="ltr"
                 value={form.deliveryCharge}
                 onChange={(event) => update("deliveryCharge", event.target.value)}
                 className={fieldClass}
@@ -237,6 +241,7 @@ export function ProductFormPage() {
                 type="number"
                 min="0"
                 step="1"
+                dir="ltr"
                 value={form.quantityAvailable}
                 onChange={(event) => update("quantityAvailable", event.target.value)}
                 className={fieldClass}
@@ -248,6 +253,7 @@ export function ProductFormPage() {
             <label className={labelClass}>{t("products.descriptionEn")}</label>
             <textarea
               rows={3}
+              dir="ltr"
               value={form.descriptionEn}
               onChange={(event) => update("descriptionEn", event.target.value)}
               className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none ring-ring focus:ring-2"

@@ -37,6 +37,7 @@ export function LoginPage() {
             <input
               id="email"
               type="email"
+              dir="ltr"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -51,6 +52,7 @@ export function LoginPage() {
             <input
               id="password"
               type="password"
+              dir="ltr"
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
