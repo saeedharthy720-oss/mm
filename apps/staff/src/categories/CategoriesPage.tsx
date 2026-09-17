@@ -1,6 +1,18 @@
-import { ChevronDown, ChevronUp, Eye, EyeOff, FolderTree, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  FolderTree,
+  Pencil,
+  Plus,
+  Trash2,
+  X
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getErrorMessage } from "../lib/getErrorMessage.js";
 import {
   useCategories,
   useCreateCategory,
@@ -105,6 +117,12 @@ export function CategoriesPage() {
 
   const sorted = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
 
+  // The add form clears its inputs on submit whether or not the request
+  // succeeded, so a failure would otherwise look exactly like a success.
+  const failed = [createCategory, updateCategory, deleteCategory, reorderCategories].find(
+    (mutation) => mutation.isError
+  );
+
   function move(category: Category, direction: -1 | 1) {
     const siblings = sorted.filter((c) => c.parentId === category.parentId);
     const index = siblings.findIndex((c) => c.id === category.id);
@@ -119,6 +137,13 @@ export function CategoriesPage() {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold">{t("categories.title")}</h1>
+
+      {failed && (
+        <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {getErrorMessage(failed.error, t("common.saveFailed"))}
+        </p>
+      )}
 
       <div className="rounded-xl border border-card-border bg-card p-5 shadow-sm">
         <h2 className="mb-3 font-bold">{t("categories.addNew")}</h2>

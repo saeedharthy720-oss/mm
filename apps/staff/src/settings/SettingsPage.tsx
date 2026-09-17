@@ -1,6 +1,7 @@
-import { CheckCircle2, Store } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getErrorMessage } from "../lib/getErrorMessage.js";
 import { useSettings, useUpdateSetting, type StoreProfile } from "./useSettings.js";
 
 const emptyProfile: StoreProfile = { nameEn: "", nameAr: "", whatsappNumber: "", currency: "OMR" };
@@ -88,15 +89,24 @@ export function SettingsPage() {
 
         <button
           type="submit"
-          className="h-11 w-full rounded-lg bg-secondary font-bold text-secondary-foreground shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
+          disabled={updateSetting.isPending}
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-secondary font-bold text-secondary-foreground shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
         >
-          {t("common.save")}
+          {updateSetting.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+          {updateSetting.isPending ? t("common.saving") : t("common.save")}
         </button>
 
         {updateSetting.isSuccess && (
           <p className="flex items-center justify-center gap-2 text-sm text-success">
             <CheckCircle2 className="h-4 w-4" />
             {t("settings.saved")}
+          </p>
+        )}
+
+        {updateSetting.isError && (
+          <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {getErrorMessage(updateSetting.error, t("common.saveFailed"))}
           </p>
         )}
       </form>

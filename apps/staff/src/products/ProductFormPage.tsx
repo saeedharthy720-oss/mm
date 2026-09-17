@@ -1,8 +1,9 @@
-import { ArrowLeft, ArrowRight, ImagePlus, Trash2, Video } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Trash2, Video } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCategories } from "../categories/useCategories.js";
+import { getErrorMessage } from "../lib/getErrorMessage.js";
 import {
   useCreateProduct,
   useDeleteProductImage,
@@ -56,6 +57,9 @@ export function ProductFormPage() {
   const deleteVideo = useDeleteProductVideo();
 
   const [form, setForm] = useState(emptyForm);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const isSaving = createProduct.isPending || updateProduct.isPending;
 
   useEffect(() => {
     if (product) {
@@ -81,10 +85,16 @@ export function ProductFormPage() {
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+    // The confirmation refers to what was saved, so it stops being true the
+    // moment the user edits anything.
+    setJustSaved(false);
   }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    setSaveError(null);
+    setJustSaved(false);
+
     const payload = {
       ...form,
       price: Number(form.price),
@@ -92,11 +102,18 @@ export function ProductFormPage() {
       deliveryCharge: Number(form.deliveryCharge)
     };
 
-    if (isEditing && id) {
-      await updateProduct.mutateAsync({ id, ...payload });
-    } else {
-      const created = await createProduct.mutateAsync(payload);
-      navigate(`/products/${created.id}`, { replace: true });
+    // Editing keeps the user on the page, so without an explicit confirmation a
+    // successful save looks identical to nothing happening at all.
+    try {
+      if (isEditing && id) {
+        await updateProduct.mutateAsync({ id, ...payload });
+        setJustSaved(true);
+      } else {
+        const created = await createProduct.mutateAsync(payload);
+        navigate(`/products/${created.id}`, { replace: true });
+      }
+    } catch (error) {
+      setSaveError(getErrorMessage(error, t("common.saveFailed")));
     }
   }
 
@@ -271,11 +288,27 @@ export function ProductFormPage() {
             ))}
           </div>
 
+          {saveError && (
+            <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {saveError}
+            </p>
+          )}
+
+          {justSaved && !saveError && (
+            <p className="flex items-center gap-2 rounded-lg bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700">
+              <Check className="h-4 w-4 shrink-0" />
+              {t("common.saved")}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="h-11 w-full rounded-lg bg-secondary font-bold text-secondary-foreground shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
+            disabled={isSaving}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-secondary font-bold text-secondary-foreground shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
-            {t("common.save")}
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isSaving ? t("common.saving") : t("common.save")}
           </button>
         </section>
       </form>
