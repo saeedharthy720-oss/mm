@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { formatPrice } from "../lib/formatPrice.js";
 import { STATUS_COLORS } from "./OrdersPage.js";
+import { usePublicSettings } from "../settings/usePublicSettings.js";
 import { useOrder, useUpdateOrderStatus } from "./useOrder.js";
 import { useOrderStatuses } from "./useOrderStatuses.js";
 import { buildWhatsAppMessage, buildWhatsAppUrl, buildWhatsAppWebUrl } from "./whatsapp.js";
@@ -26,6 +27,7 @@ export function OrderDetailPage() {
   const isArabic = i18n.language === "ar";
   const { data: order, isLoading } = useOrder(id);
   const { data: statuses = [] } = useOrderStatuses();
+  const { data: storeProfile } = usePublicSettings();
   const updateStatus = useUpdateOrderStatus(id!);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [note, setNote] = useState("");
@@ -50,7 +52,12 @@ export function OrderDetailPage() {
       ? `https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}`
       : null;
 
-  const whatsappMessage = buildWhatsAppMessage(order, isArabic);
+  const whatsappMessage = buildWhatsAppMessage(
+    order,
+    isArabic,
+    isArabic ? storeProfile?.nameAr : storeProfile?.nameEn,
+    storeProfile?.currency
+  );
   const whatsappUrl = buildWhatsAppUrl(order.customerPhone, whatsappMessage);
   const whatsappWebUrl = buildWhatsAppWebUrl(order.customerPhone, whatsappMessage);
 

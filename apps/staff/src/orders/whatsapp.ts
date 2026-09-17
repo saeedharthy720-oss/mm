@@ -1,40 +1,98 @@
 import { formatPrice } from "../lib/formatPrice.js";
 import type { OrderDetail } from "./useOrder.js";
 
-export function buildWhatsAppMessage(order: OrderDetail, isArabic: boolean): string {
-  const itemLines = order.items.map(
-    (item) => `- ${item.productNameSnapshot} x${item.quantity} (${item.unitLabelSnapshot})`
+const PAYMENT_METHOD_LABELS = {
+  card: { ar: "بطاقة بنكية", en: "Card" },
+  pay_on_delivery: { ar: "الدفع عند الاستلام", en: "Cash on delivery" }
+} as const;
+
+const PAYMENT_STATUS_LABELS = {
+  pending: { ar: "بانتظار الدفع", en: "Pending" },
+  paid: { ar: "مدفوع", en: "Paid" },
+  failed: { ar: "فشل الدفع", en: "Failed" },
+  refunded: { ar: "مُسترجع", en: "Refunded" }
+} as const;
+
+function formatOrderDate(iso: string, isArabic: boolean): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  // -u-nu-latn keeps Latin digits in Arabic: prices and quantities elsewhere in
+  // the message are Latin, and mixing them with Arabic-Indic numerals in the
+  // same message reads as a mistake.
+  // en-GB rather than en-US so both locales read day/month/year.
+  return date.toLocaleString(isArabic ? "ar-OM-u-nu-latn" : "en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+export function buildWhatsAppMessage(
+  order: OrderDetail,
+  isArabic: boolean,
+  storeName?: string,
+  currency = "OMR"
+): string {
+  const lang = isArabic ? "ar" : "en";
+  const money = (value: string | number) => formatPrice(value, currency);
+
+  const lines: string[] = [];
+  const divider = "──────────────";
+
+  if (storeName) {
+    lines.push(`🏪 *${storeName}*`, "");
+  }
+
+  lines.push(
+    isArabic ? `مرحباً ${order.customerName} 👋` : `Hello ${order.customerName} 👋`,
+    isArabic ? "تم استلام طلبك بنجاح ✅" : "We've received your order ✅",
+    "",
+    `🧾 ${isArabic ? "رقم الطلب" : "Order number"}: *${order.orderNumber}*`,
+    `📅 ${isArabic ? "التاريخ" : "Date"}: ${formatOrderDate(order.createdAt, isArabic)}`,
+    `📌 ${isArabic ? "الحالة" : "Status"}: ${isArabic ? order.status.labelAr : order.status.labelEn}`,
+    "",
+    `🛒 *${isArabic ? "المنتجات" : "Items"}*`,
+    divider
   );
 
-  const lines = isArabic
-    ? [
-        `طلب ${order.orderNumber}`,
-        `العميل: ${order.customerName}`,
-        "",
-        "المنتجات:",
-        ...itemLines,
-        "",
-        `الإجمالي: ${formatPrice(order.total)}`,
-        `عنوان التوصيل: ${order.deliveryAddressText}`,
-        `الحالة الحالية: ${order.status.labelAr}`
-      ]
-    : [
-        `Order ${order.orderNumber}`,
-        `Customer: ${order.customerName}`,
-        "",
-        "Items:",
-        ...itemLines,
-        "",
-        `Total: ${formatPrice(order.total)}`,
-        `Delivery address: ${order.deliveryAddressText}`,
-        `Current status: ${order.status.labelEn}`
-      ];
+  order.items.forEach((item, index) => {
+    const lineTotal = money(item.lineTotal);
+    lines.push(
+      `${index + 1}. ${item.productNameSnapshot}`,
+      `   ${isArabic ? "الكمية" : "Qty"}: ${item.quantity} (${item.unitLabelSnapshot})`,
+      `   ${money(item.unitPrice)} × ${item.quantity} = *${lineTotal}*`
+    );
+  });
+
+  lines.push(
+    "",
+    `💰 *${isArabic ? "الحساب" : "Summary"}*`,
+    divider,
+    `${isArabic ? "المجموع الفرعي" : "Subtotal"}: ${money(order.subtotal)}`,
+    `${isArabic ? "رسوم التوصيل" : "Delivery"}: ${money(order.deliveryChargeTotal)}`,
+    `*${isArabic ? "الإجمالي" : "Total"}: ${money(order.total)}*`,
+    "",
+    `💳 ${isArabic ? "طريقة الدفع" : "Payment"}: ${PAYMENT_METHOD_LABELS[order.paymentMethod][lang]}`,
+    `${isArabic ? "حالة الدفع" : "Payment status"}: ${PAYMENT_STATUS_LABELS[order.paymentStatus][lang]}`,
+    "",
+    `📍 *${isArabic ? "عنوان التوصيل" : "Delivery address"}*`,
+    order.deliveryAddressText
+  );
 
   if (order.deliveryLat && order.deliveryLng) {
     lines.push(
-      `${isArabic ? "الموقع" : "Location"}: https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}`
+      `🗺️ ${isArabic ? "الموقع على الخريطة" : "Map location"}: https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}`
     );
   }
+
+  if (order.deliveryNotes) {
+    lines.push("", `📝 ${isArabic ? "ملاحظات التوصيل" : "Delivery notes"}: ${order.deliveryNotes}`);
+  }
+
+  if (order.orderNotes) {
+    lines.push(`📝 ${isArabic ? "ملاحظات الطلب" : "Order notes"}: ${order.orderNotes}`);
+  }
+
+  lines.push("", isArabic ? "شكراً لتعاملك معنا 🙏" : "Thank you for your order 🙏");
 
   return lines.join("\n");
 }
