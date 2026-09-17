@@ -1,0 +1,65 @@
+# Netlify config for the combined site: storefront at "/", staff dashboard at
+# "/admin". Set the Netlify project's base directory to the repository root for
+# this file to be picked up.
+#
+# The two apps are still built separately (see scripts/assemble-site.mjs) — only
+# the hosting is shared, so customers never download the dashboard bundle.
+
+[build]
+  command = "npm install --include=dev && npm run build:site"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# The API lives on Render. If a build ever ships without VITE_API_BASE_URL,
+# relative /api/* calls must fail loudly instead of being answered with
+# index.html at status 200 by the catch-alls below.
+[[redirects]]
+  from = "/api/*"
+  to = "/api-not-hosted-here"
+  status = 404
+  force = true
+
+# Both apps are client-side routed, so any path that isn't a real file has to
+# serve the right index.html. The /admin rule must stay above the site-wide one.
+# force is left off so real files (assets, favicon) still win.
+# "/admin" with no trailing slash is what people actually type.
+[[redirects]]
+  from = "/admin"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Vite fingerprints asset filenames, so they can be cached indefinitely.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/admin/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# The dashboard should never appear in search results.
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

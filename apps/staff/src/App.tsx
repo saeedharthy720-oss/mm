@@ -31,7 +31,12 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider i18n={i18n}>
-        <BrowserRouter>
+        {/* Taken from Vite's `base` so the router and the asset URLs can never
+            disagree about where this app is mounted. The trailing slash has to
+            go: with basename="/admin/" the router fails to match the location
+            "/admin" — which is exactly what someone types — and renders
+            nothing at all. */}
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthGate>
             <Routes>
               <Route element={<StaffLayout />}>
