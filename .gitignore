@@ -9,3 +9,6 @@ build/
 Thumbs.db
 uploads/
 apps/api/prisma/dev.db
+
+# TypeScript incremental build cache
+*.tsbuildinfo
