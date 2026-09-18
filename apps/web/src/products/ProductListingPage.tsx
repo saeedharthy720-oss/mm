@@ -1,5 +1,6 @@
 import { Loader2, Package, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { LoadFailed } from "../components/LoadFailed.js";
 import { useSearchParams } from "react-router-dom";
 import { useCategories } from "../categories/useCategories.js";
 import { ProductCard } from "./ProductCard.js";
@@ -15,7 +16,7 @@ export function ProductListingPage() {
   const page = Number(searchParams.get("page") ?? "1");
   const isArabic = i18n.language === "ar";
 
-  const { data, isLoading } = useProducts({
+  const { data, isLoading, isError, refetch, isFetching } = useProducts({
     categoryId: categoryId || undefined,
     search: search || undefined,
     page
@@ -71,7 +72,9 @@ export function ProductListingPage() {
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      ) : data && data.items.length > 0 ? (
+      ) : isError ? (
+          <LoadFailed onRetry={() => refetch()} isRetrying={isFetching} />
+        ) : data && data.items.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {data.items.map((product) => (
             <ProductCard key={product.id} product={product} />

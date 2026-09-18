@@ -82,6 +82,9 @@
     "deliveryNotes": "Delivery notes"
   },
   "common": {
-    "delete": "Remove"
+    "delete": "Remove",
+    "loadFailed": "Could not load",
+    "loadFailedHint": "Check your connection and try again.",
+    "retry": "Try again"
   }
 }

@@ -12,3 +12,6 @@ apps/api/prisma/dev.db
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Scratch scripts used while debugging
+tmp-*

@@ -1,6 +1,7 @@
 import { Loader2, Package, Search } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { LoadFailed } from "../components/LoadFailed.js";
 import { useNavigate } from "react-router-dom";
 import { useCategories } from "../categories/useCategories.js";
 import { ProductCard } from "../products/ProductCard.js";
@@ -15,7 +16,7 @@ export function HomePage() {
 
   const { data: categories = [] } = useCategories();
   const { data: profile } = usePublicSettings();
-  const { data, isLoading } = useProducts({
+  const { data, isLoading, isError, refetch, isFetching } = useProducts({
     search: search || undefined,
     categoryId: selectedCategory || undefined
   });
@@ -94,7 +95,9 @@ export function HomePage() {
             <div className="flex h-64 items-center justify-center text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
-          ) : data && data.items.length > 0 ? (
+          ) : isError ? (
+          <LoadFailed onRetry={() => refetch()} isRetrying={isFetching} />
+        ) : data && data.items.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {data.items.map((product) => (
                 <ProductCard key={product.id} product={product} />
