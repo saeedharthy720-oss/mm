@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCategories } from "../categories/useCategories.js";
 import { getErrorMessage } from "../lib/getErrorMessage.js";
+import { resolveMediaUrl } from "../lib/resolveMediaUrl.js";
 import {
   useCreateProduct,
   useDeleteProductImage,
@@ -355,14 +356,16 @@ export function ProductFormPage() {
             {product.images.map((image) => (
               <div key={image.id} className="group relative">
                 <img
-                  src={`${import.meta.env.VITE_API_BASE_URL}${image.url}`}
+                  src={resolveMediaUrl(image.url) ?? ""}
                   alt=""
-                  className="h-24 w-24 rounded-lg border border-border object-cover"
+                  loading="lazy"
+                  className="h-24 w-24 rounded-lg border border-border bg-muted object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => deleteImage.mutate({ productId: product.id, imageId: image.id })}
-                  className="absolute -end-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm"
+                  disabled={deleteImage.isPending}
+                  className="absolute -end-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm disabled:opacity-60"
                 >
                   <Trash2 className="h-3 w-3" />
                   <span className="sr-only">{t("common.delete")}</span>
@@ -370,12 +373,27 @@ export function ProductFormPage() {
               </div>
             ))}
 
-            <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted">
+            {/* Uploading to object storage over a phone connection is not
+                instant. Without this the tile looks inert and people tap it
+                again, uploading the same photo twice. */}
+            {uploadImage.isPending && (
+              <div className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-secondary bg-secondary/10 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+                <span className="text-xs">{t("products.uploading")}</span>
+              </div>
+            )}
+
+            <label
+              className={`flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-muted-foreground transition-colors ${
+                uploadImage.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted"
+              }`}
+            >
               <ImagePlus className="h-6 w-6" />
-              <span className="text-xs">{t("products.images")}</span>
+              <span className="text-xs">{t("products.addImage")}</span>
               <input
                 type="file"
                 accept="image/*"
+                disabled={uploadImage.isPending}
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
@@ -386,13 +404,21 @@ export function ProductFormPage() {
             </label>
           </div>
 
+          {uploadImage.isError && (
+            <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {getErrorMessage(uploadImage.error, t("products.uploadFailed"))}
+            </p>
+          )}
+
           <h2 className="pt-2 font-bold">{t("products.video")}</h2>
           {product.videoUrl ? (
             <div className="flex flex-wrap items-center gap-3">
               <video
-                src={`${import.meta.env.VITE_API_BASE_URL}${product.videoUrl}`}
+                src={resolveMediaUrl(product.videoUrl) ?? ""}
                 controls
-                className="h-32 rounded-lg border border-border"
+                preload="metadata"
+                className="h-32 rounded-lg border border-border bg-muted"
               />
               <button
                 type="button"
@@ -404,12 +430,30 @@ export function ProductFormPage() {
               </button>
             </div>
           ) : (
-            <label className="flex h-24 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:bg-muted">
-              <Video className="h-6 w-6" />
-              <span className="text-xs">{t("products.video")}</span>
+            <label
+              className={`flex h-24 w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-muted-foreground transition-colors ${
+                uploadVideo.isPending
+                  ? "cursor-not-allowed border-secondary bg-secondary/10"
+                  : "cursor-pointer border-border hover:bg-muted"
+              }`}
+            >
+              {/* Videos are far larger than photos, so the wait is longer and
+                  the need for a visible state greater. */}
+              {uploadVideo.isPending ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+                  <span className="text-xs">{t("products.uploading")}</span>
+                </>
+              ) : (
+                <>
+                  <Video className="h-6 w-6" />
+                  <span className="text-xs">{t("products.addVideo")}</span>
+                </>
+              )}
               <input
                 type="file"
                 accept="video/*"
+                disabled={uploadVideo.isPending}
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
@@ -418,6 +462,13 @@ export function ProductFormPage() {
                 }}
               />
             </label>
+          )}
+
+          {uploadVideo.isError && (
+            <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {getErrorMessage(uploadVideo.error, t("products.uploadFailed"))}
+            </p>
           )}
         </section>
       )}

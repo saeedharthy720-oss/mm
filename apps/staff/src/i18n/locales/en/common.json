@@ -77,7 +77,12 @@
     "video": "Video",
     "cardDisabled": "(unavailable)",
     "cardDisabledHint": "Card payment is switched off shop-wide, so this setting has no effect.",
-    "cardDisabledNotice": "Card payment is currently unavailable, so every order is cash on delivery. This setting is kept for when card payment is switched back on."
+    "cardDisabledNotice": "Card payment is currently unavailable, so every order is cash on delivery. This setting is kept for when card payment is switched back on.",
+    "uploading": "Uploading…",
+    "addImage": "Add photo",
+    "addVideo": "Add video",
+    "uploadFailed": "Upload failed. Please try again.",
+    "noImage": "No photo"
   },
   "settings": {
     "title": "Store settings",

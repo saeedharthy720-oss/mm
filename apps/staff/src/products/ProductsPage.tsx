@@ -1,9 +1,10 @@
-import { Package, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Package, Pencil, Plus, Search, Trash2, ImageOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useCategories } from "../categories/useCategories.js";
 import { formatPrice } from "../lib/formatPrice.js";
+import { resolveMediaUrl } from "../lib/resolveMediaUrl.js";
 import { useDeleteProduct, useProducts } from "./useProducts.js";
 
 export function ProductsPage() {
@@ -71,6 +72,24 @@ export function ProductsPage() {
               key={product.id}
               className="flex flex-wrap items-center gap-3 rounded-xl border border-card-border bg-card p-4 shadow-sm"
             >
+              {/* A catalogue is easier to scan by picture than by name, and it
+                  makes a product missing its photo obvious at a glance. */}
+              {product.images.length > 0 ? (
+                <img
+                  src={resolveMediaUrl(product.images[0]!.url) ?? ""}
+                  alt=""
+                  loading="lazy"
+                  className="h-14 w-14 shrink-0 rounded-lg border border-border bg-muted object-cover"
+                />
+              ) : (
+                <div
+                  title={t("products.noImage")}
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground"
+                >
+                  <ImageOff className="h-5 w-5" />
+                </div>
+              )}
+
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-bold">{isArabic ? product.nameAr : product.nameEn}</p>
