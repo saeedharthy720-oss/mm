@@ -80,7 +80,7 @@ describe("buildWhatsAppUrl", () => {
   it("normalises the number and encodes the message", () => {
     const url = buildWhatsAppUrl("97373394", "line one\nline two");
 
-    expect(url).toContain("wa.me/96897373394");
+    expect(url).toContain("api.whatsapp.com/send?phone=96897373394");
     expect(url).toContain("%0A");
     expect(url).not.toContain("\n");
   });

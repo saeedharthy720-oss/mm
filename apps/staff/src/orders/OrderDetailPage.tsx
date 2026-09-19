@@ -143,10 +143,10 @@ export function OrderDetailPage() {
           {t("orders.sendWhatsApp")}
         </a>
 
-        {/* wa.me depends on a hand-off to the desktop app that silently fails on
-            some machines, leaving a blank page. These two always work: WhatsApp
-            Web renders in the browser, and copying lets the message be pasted
-            anywhere at all. */}
+        {/* The link above depends on a hand-off to the desktop app that does not
+            complete on some machines, leaving a blank page. These two always
+            work: WhatsApp Web renders in the browser, and copying lets the
+            message be pasted anywhere at all. */}
         <div className="grid gap-2 sm:grid-cols-2">
           <a
             href={whatsappWebUrl}
@@ -176,9 +176,9 @@ export function OrderDetailPage() {
           </pre>
         </details>
 
-        {/* Forwarding to colleagues. wa.me cannot deliver on its own, so this
-            is one tap per person rather than an automatic notification — the
-            admin chooses who appears here on the Staff page. */}
+        {/* Forwarding to colleagues. Click-to-chat cannot deliver on its own,
+            so this is one tap per person rather than an automatic notification
+            — the admin chooses who appears here on the Staff page. */}
         {recipients.length > 0 && (
           <div className="rounded-lg border border-border bg-card p-3">
             <p className="mb-2 text-sm font-medium text-muted-foreground">{t("orders.notifyStaff")}</p>

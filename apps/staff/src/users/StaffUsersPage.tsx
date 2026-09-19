@@ -192,7 +192,7 @@ export function StaffUsersPage() {
                 )}
 
                 <div className="w-full border-t border-border pt-3">
-                  {/* wa.me cannot deliver on its own, so this decides who shows
+                  {/* Click-to-chat cannot deliver on its own, so this decides who shows
                       up as a one-tap forward on each order, not who gets an
                       automatic message. */}
                   <p className="mb-2 text-xs font-medium text-muted-foreground">

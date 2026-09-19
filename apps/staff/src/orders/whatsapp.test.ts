@@ -8,8 +8,8 @@ import {
 import type { OrderDetail } from "./useOrder.js";
 
 describe("toInternationalPhone", () => {
-  // wa.me only accepts full international numbers. A bare local number produces
-  // a WhatsApp page that loads forever rather than reporting an error.
+  // Click-to-chat only accepts full international numbers. A bare local number
+  // produces a page that loads forever rather than reporting an error.
   it.each([
     ["97373394", "96897373394"], // local 8-digit, as customers type it
     ["9737 3394", "96897373394"], // local with a space
@@ -107,7 +107,7 @@ describe("buildWhatsAppMessage", () => {
 
 describe("whatsapp urls", () => {
   it("normalises the phone in both link styles", () => {
-    expect(buildWhatsAppUrl("97373394", "hi")).toContain("wa.me/96897373394");
+    expect(buildWhatsAppUrl("97373394", "hi")).toContain("api.whatsapp.com/send?phone=96897373394");
     expect(buildWhatsAppWebUrl("97373394", "hi")).toContain("phone=96897373394");
   });
 
@@ -155,7 +155,7 @@ describe("url length", () => {
 
     expect(encodeURIComponent(message).length).toBeGreaterThan(1800);
     expect(url.length).toBeLessThanOrEqual(1800);
-    expect(decodeURIComponent(url.split("?text=")[1]!)).toContain("…");
+    expect(new URL(url).searchParams.get("text")!).toContain("…");
   });
 
   it("caps the WhatsApp Web link too", () => {
@@ -166,11 +166,11 @@ describe("url length", () => {
 
   it("never truncates mid-character", () => {
     const message = buildWhatsAppMessage(bigOrder, true, "متجر مواد البناء");
-    const text = buildWhatsAppUrl(bigOrder.customerPhone, message).split("?text=")[1]!;
+    const text = new URL(buildWhatsAppUrl(bigOrder.customerPhone, message)).searchParams.get("text")!;
 
     // A split surrogate pair or half-encoded byte throws here.
-    expect(() => decodeURIComponent(text)).not.toThrow();
-    expect(decodeURIComponent(text)).not.toContain("�");
+    expect(() => decodeURIComponent(encodeURIComponent(text))).not.toThrow();
+    expect(text).not.toContain("�");
   });
 });
 
@@ -180,7 +180,7 @@ describe("encoding", () => {
 
     // Double encoding turns "%" into "%25" and WhatsApp shows the escapes.
     expect(url).not.toContain("%25");
-    expect(decodeURIComponent(url.split("?text=")[1]!)).toBe("مرحبا 👋");
+    expect(new URL(url).searchParams.get("text")!).toBe("مرحبا 👋");
   });
 
   it.each(["a & b", "50% off", "#order", "what?", "a+b", "100% مرحبا"])(
@@ -188,15 +188,25 @@ describe("encoding", () => {
     (text) => {
       const url = buildWhatsAppUrl("97373394", text);
 
-      expect(decodeURIComponent(url.split("?text=")[1]!)).toBe(text);
+      expect(new URL(url).searchParams.get("text")!).toBe(text);
     }
   );
 
-  it("produces a phone segment of digits only", () => {
-    const url = buildWhatsAppUrl("+968 9737-3394", "hi");
-    const phoneSegment = url.slice("https://wa.me/".length, url.indexOf("?"));
+  it("sends the phone as digits only", () => {
+    // Click-to-chat rejects "+", spaces and dashes, so the number must arrive
+    // already stripped no matter how it was typed into the order.
+    const phone = new URL(buildWhatsAppUrl("+968 9737-3394", "hi")).searchParams.get("phone");
 
-    expect(phoneSegment).toMatch(/^\d+$/);
-    expect(phoneSegment).toBe("96897373394");
+    expect(phone).toMatch(/^\d+$/);
+    expect(phone).toBe("96897373394");
+  });
+
+  it("uses api.whatsapp.com, not the wa.me shortener", () => {
+    // wa.me does not resolve on some networks — it failed on the owner's
+    // machine even with no message at all, while this domain worked.
+    const url = new URL(buildWhatsAppUrl("97373394", "hi"));
+
+    expect(url.hostname).toBe("api.whatsapp.com");
+    expect(url.pathname).toBe("/send");
   });
 });

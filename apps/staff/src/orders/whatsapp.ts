@@ -165,17 +165,25 @@ export function fitMessageToUrl(base: string, message: string, maxUrlLength = MA
 }
 
 /**
- * The official click-to-chat URL. One function so the number is normalised and
- * the message encoded exactly once, everywhere.
+ * The official click-to-chat URL.
+ *
+ * api.whatsapp.com rather than wa.me. Both are official and do the same thing,
+ * but wa.me does not resolve on every network — on the owner's machine it fails
+ * even with no message at all, while api.whatsapp.com opens the desktop app
+ * from the same number. wa.me is a .me shortener and is a common casualty of
+ * ISP-level DNS filtering; api.whatsapp.com is a WhatsApp domain and is not.
+ *
+ * One function so the number is normalised and the message encoded exactly
+ * once, everywhere.
  */
 export function buildWhatsAppUrl(phone: string, message: string): string {
-  const base = `https://wa.me/${toInternationalPhone(phone)}?text=`;
+  const base = `https://api.whatsapp.com/send?phone=${toInternationalPhone(phone)}&text=`;
   return base + encodeURIComponent(fitMessageToUrl(base, message));
 }
 
 /**
- * WhatsApp Web, for when wa.me's hand-off to a desktop app does not complete
- * and leaves a blank tab.
+ * WhatsApp Web. The fallback for when the hand-off to a desktop app does not
+ * complete and leaves a blank tab — it renders in the browser instead.
  */
 export function buildWhatsAppWebUrl(phone: string, message: string): string {
   const base = `https://web.whatsapp.com/send?phone=${toInternationalPhone(phone)}&text=`;

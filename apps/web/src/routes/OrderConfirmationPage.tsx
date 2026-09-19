@@ -59,7 +59,7 @@ export function OrderConfirmationPage() {
         </div>
 
         {/* One tap delivers the order to the shop's WhatsApp and leaves the
-            customer a copy in their own chat. wa.me cannot send by itself, so
+            customer a copy in their own chat. Click-to-chat cannot send by itself, so
             this is the closest thing to a notification without the paid API. */}
         {storeWhatsApp ? (
           <div className="mt-5">
