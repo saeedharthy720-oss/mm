@@ -112,10 +112,17 @@ async function attemptCheckout(
     for (const item of input.items) {
       const product = productById.get(item.productId)!;
       if (product.manualStockOverride) {
-        await tx.product.update({
-          where: { id: product.id },
+        // These products stay purchasable past zero on purpose — the shop
+        // restocks them on demand. The counter must still stop at zero, though:
+        // decrementing unconditionally drives it far negative, and a stock
+        // figure of -99,963 tells the owner nothing about what is on the floor.
+        const decremented = await tx.product.updateMany({
+          where: { id: product.id, quantityAvailable: { gte: item.quantity } },
           data: { quantityAvailable: { decrement: item.quantity } }
         });
+        if (decremented.count === 0) {
+          await tx.product.update({ where: { id: product.id }, data: { quantityAvailable: 0 } });
+        }
       } else {
         const result = await tx.product.updateMany({
           where: { id: product.id, quantityAvailable: { gte: item.quantity } },

@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+// An upper bound on a single line. Products with manualStockOverride skip the
+// stock check entirely, so without this a slipped keystroke in the quantity box
+// becomes a six-figure order that looks perfectly valid to the system.
+// Deliberately generous — a large construction order should still go through.
+export const MAX_LINE_QUANTITY = 10_000;
+
 export const checkoutSchema = z.object({
   customerName: z.string().min(1),
   customerPhone: z.string().min(6),
@@ -13,7 +19,7 @@ export const checkoutSchema = z.object({
     .array(
       z.object({
         productId: z.string().uuid(),
-        quantity: z.number().int().positive()
+        quantity: z.number().int().positive().max(MAX_LINE_QUANTITY)
       })
     )
     .min(1)
