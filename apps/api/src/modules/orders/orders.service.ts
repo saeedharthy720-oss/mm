@@ -247,6 +247,28 @@ export async function getOrderById(id: string) {
   return order;
 }
 
+/**
+ * A customer's own orders. Scoped by the customer id on the session rather than
+ * anything the caller sends, so one customer cannot read another's orders by
+ * changing a parameter.
+ */
+export async function listOwnOrders(customerId: string, query: ListOrdersQuery) {
+  const where: Prisma.OrderWhereInput = { customerId };
+
+  const [items, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: { status: true, items: true },
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize
+    }),
+    prisma.order.count({ where })
+  ]);
+
+  return { items, page: query.page, pageSize: query.pageSize, total };
+}
+
 export async function listOrders(query: ListOrdersQuery) {
   const where: Prisma.OrderWhereInput = {
     ...(query.status ? { status: { key: query.status } } : {}),

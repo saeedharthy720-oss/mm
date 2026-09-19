@@ -9,12 +9,19 @@ const PERMISSIONS = [
   { key: "orders:manage", description: "Change order status, cancel orders" },
   { key: "orders:view", description: "View orders" },
   { key: "users:manage", description: "Manage staff users and roles" },
-  { key: "settings:manage", description: "Edit store settings" }
+  { key: "settings:manage", description: "Edit store settings" },
+  { key: "orders:view_own", description: "View one's own orders as a customer" }
 ];
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: PERMISSIONS.map((p) => p.key),
-  employee: ["orders:view", "orders:manage"]
+  // Staff roles. admin gets everything except the customer-only permission,
+  // which would be meaningless without a linked customer record.
+  admin: PERMISSIONS.map((p) => p.key).filter((key) => key !== "orders:view_own"),
+  employee: ["orders:view", "orders:manage"],
+  // Customers register themselves. They can see their own orders and nothing
+  // else; having them in the same table as staff keeps one login form and one
+  // session mechanism, with the role deciding what they reach.
+  customer: ["orders:view_own"]
 };
 
 const UNITS = [

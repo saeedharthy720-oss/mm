@@ -12,6 +12,8 @@ declare global {
         email: string;
         name: string;
         roleKey: string;
+        // Set only for customer accounts; used to scope "my orders".
+        customerId: string | null;
         permissions: string[];
       };
     }
@@ -37,6 +39,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       email: user.email,
       name: user.name,
       roleKey: user.role.key,
+      customerId: user.customerId,
       permissions: user.role.rolePermissions.map((rp) => rp.permission.key)
     };
 

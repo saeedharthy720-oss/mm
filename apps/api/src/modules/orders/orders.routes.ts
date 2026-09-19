@@ -8,6 +8,7 @@ import {
   checkoutHandler,
   getOrderHandler,
   listOrdersHandler,
+  listOwnOrdersHandler,
   updateOrderStatusHandler
 } from "./orders.controller.js";
 
@@ -15,6 +16,13 @@ export const ordersRouter = Router();
 
 ordersRouter.post("/", checkoutRateLimiter, asyncHandler(checkoutHandler));
 ordersRouter.get("/", authenticate, authorize(PERMISSION_KEYS.ORDERS_VIEW), asyncHandler(listOrdersHandler));
+// Must be declared before "/:id", or Express matches it as an order id.
+ordersRouter.get(
+  "/mine",
+  authenticate,
+  authorize(PERMISSION_KEYS.ORDERS_VIEW_OWN),
+  asyncHandler(listOwnOrdersHandler)
+);
 ordersRouter.get("/:id", asyncHandler(getOrderHandler));
 ordersRouter.patch(
   "/:id/status",

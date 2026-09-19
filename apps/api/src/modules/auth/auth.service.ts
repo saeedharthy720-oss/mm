@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
-import { UnauthorizedError } from "../../errors/AppError.js";
+import { ConflictError, UnauthorizedError } from "../../errors/AppError.js";
 import { prisma } from "../../lib/prisma.js";
-import type { LoginInput } from "./auth.schemas.js";
+import type { LoginInput, RegisterInput } from "./auth.schemas.js";
 import {
   getTokenExpiryDate,
   hashToken,
@@ -23,6 +23,9 @@ function toPublicUser(user: NonNullable<Awaited<ReturnType<typeof loadUserWithPe
     name: user.name,
     email: user.email,
     role: user.role.key,
+    // Present only for customers; the storefront uses it to decide whether to
+    // offer an account area, and the dashboard to reject non-staff.
+    customerId: user.customerId,
     permissions: user.role.rolePermissions.map((rp) => rp.permission.key)
   };
 }
@@ -40,6 +43,56 @@ async function issueSession(userId: string) {
   });
 
   return { accessToken, refreshToken };
+}
+
+/**
+ * Registers a customer. Customers live in the same table as staff so there is
+ * one login form and one session mechanism; the role decides what they reach.
+ *
+ * If the phone already belongs to a guest who has ordered before, the account
+ * attaches to that existing customer record, so registering reveals the order
+ * history they already had rather than starting them from nothing.
+ */
+export async function register(input: RegisterInput) {
+  const customerRole = await prisma.role.findUnique({ where: { key: "customer" } });
+  if (!customerRole) {
+    throw new Error("The 'customer' role is missing — run the database seed.");
+  }
+
+  const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existingUser) {
+    throw new ConflictError("An account with this email already exists");
+  }
+
+  const user = await prisma.$transaction(async (tx) => {
+    const customer = await tx.customer.upsert({
+      where: { phone: input.phone },
+      update: { name: input.name },
+      create: { phone: input.phone, name: input.name }
+    });
+
+    // One login per customer record: a second person cannot claim a phone
+    // number that has already been registered.
+    const claimed = await tx.user.findUnique({ where: { customerId: customer.id } });
+    if (claimed) {
+      throw new ConflictError("An account already exists for this phone number");
+    }
+
+    return tx.user.create({
+      data: {
+        name: input.name,
+        email: input.email,
+        passwordHash: await bcrypt.hash(input.password, 10),
+        roleId: customerRole.id,
+        customerId: customer.id
+      },
+      include: { role: { include: { rolePermissions: { include: { permission: true } } } } }
+    });
+  });
+
+  const { accessToken, refreshToken } = await issueSession(user.id);
+
+  return { accessToken, refreshToken, user: toPublicUser(user) };
 }
 
 export async function login(input: LoginInput) {

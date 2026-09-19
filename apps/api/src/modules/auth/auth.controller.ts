@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { env } from "../../config/env.js";
 import * as authService from "./auth.service.js";
-import { loginSchema } from "./auth.schemas.js";
+import { loginSchema, registerSchema } from "./auth.schemas.js";
 
 const isProduction = env.NODE_ENV === "production";
 
@@ -31,6 +31,15 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
 function clearAuthCookies(res: Response) {
   res.clearCookie("access_token", accessCookieOptions);
   res.clearCookie("refresh_token", refreshCookieOptions);
+}
+
+export async function registerHandler(req: Request, res: Response) {
+  const input = registerSchema.parse(req.body);
+  const { accessToken, refreshToken, user } = await authService.register(input);
+  // Registering signs you straight in — making someone log in again right
+  // after choosing a password is friction with no security benefit.
+  setAuthCookies(res, accessToken, refreshToken);
+  res.status(201).json({ user });
 }
 
 export async function loginHandler(req: Request, res: Response) {

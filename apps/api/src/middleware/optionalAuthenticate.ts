@@ -19,6 +19,7 @@ export async function optionalAuthenticate(req: Request, _res: Response, next: N
         email: user.email,
         name: user.name,
         roleKey: user.role.key,
+        customerId: user.customerId,
         permissions: user.role.rolePermissions.map((rp) => rp.permission.key)
       };
     }

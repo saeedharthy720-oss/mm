@@ -56,7 +56,14 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  // Set only for customer accounts, linking the login to the record their
+  // orders hang off. Staff accounts leave it null. Keeping customers in this
+  // table means one login form and one session mechanism for everyone; what
+  // they can do is decided by their role's permissions, as it already was.
+  customerId String? @unique @map("customer_id")
+
   role               Role                 @relation(fields: [roleId], references: [id])
+  customer           Customer?            @relation(fields: [customerId], references: [id])
   refreshTokens      RefreshToken[]
   orderStatusChanges OrderStatusHistory[]
 
@@ -183,6 +190,8 @@ model Customer {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   orders Order[]
+  // Present once this customer registers. Guest customers never have one.
+  user   User?
 
   @@map("customers")
 }

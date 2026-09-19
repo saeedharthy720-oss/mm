@@ -60,4 +60,41 @@ describe("authorize", () => {
       }
     );
   });
+
+  // Customers share the users table with staff, so the role boundary is the
+  // only thing keeping a shopper out of the dashboard.
+  describe("the customer role", () => {
+    const customer = { permissions: ["orders:view_own"], customerId: "cus_1" };
+
+    it("can view its own orders", () => {
+      expect(run("orders:view_own", customer)).toHaveBeenCalledWith();
+    });
+
+    it.each([
+      "orders:view",
+      "orders:manage",
+      "products:manage",
+      "categories:manage",
+      "users:manage",
+      "settings:manage"
+    ])("cannot %s", (permission) => {
+      expect(run(permission, customer).mock.calls[0]![0]).toBeInstanceOf(ForbiddenError);
+    });
+
+    it("cannot read the whole order list through the staff permission", () => {
+      // orders:view_own must never be mistaken for orders:view, which returns
+      // every customer's orders.
+      expect(run("orders:view", customer).mock.calls[0]![0]).toBeInstanceOf(ForbiddenError);
+    });
+  });
+
+  // Staff have no customerId, so "my orders" has nothing to scope to.
+  describe("staff against the customer-only permission", () => {
+    it.each([
+      ["admin", ["products:manage", "categories:manage", "orders:manage", "orders:view", "users:manage", "settings:manage"]],
+      ["employee", ["orders:view", "orders:manage"]]
+    ])("%s cannot use orders:view_own", (_role, permissions) => {
+      expect(run("orders:view_own", { permissions }).mock.calls[0]![0]).toBeInstanceOf(ForbiddenError);
+    });
+  });
 });
