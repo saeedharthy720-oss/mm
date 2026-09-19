@@ -25,10 +25,16 @@ export function useAssignablePermissions() {
   return useQuery({
     queryKey: ["permissions"],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ permissions: AssignablePermission[] }>(
-        "/api/v1/users/permissions"
-      );
-      return data.permissions;
+      try {
+        const { data } = await apiClient.get<{ permissions: AssignablePermission[] }>(
+          "/api/v1/users/permissions"
+        );
+        return data.permissions ?? [];
+      } catch {
+        // An API that predates this endpoint answers 404. Returning nothing
+        // hides the permission controls rather than showing broken ones.
+        return [];
+      }
     },
     staleTime: 5 * 60 * 1000
   });
@@ -41,7 +47,15 @@ export function useUsers() {
     queryKey: USERS_KEY,
     queryFn: async () => {
       const { data } = await apiClient.get<{ users: StaffUser[] }>("/api/v1/users");
-      return data.users;
+      // The dashboard and the API deploy separately, so this can briefly meet a
+      // version that predates per-user permissions. Defaulting the lists keeps
+      // the page working instead of crashing on undefined.includes().
+      return data.users.map((user) => ({
+        ...user,
+        permissions: user.permissions ?? [],
+        rolePermissions: user.rolePermissions ?? [],
+        extraPermissions: user.extraPermissions ?? []
+      }));
     }
   });
 }
