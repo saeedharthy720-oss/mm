@@ -4,11 +4,11 @@
 
 | Part | URL |
 |---|---|
-| Storefront | https://bms-store.netlify.app |
-| Staff dashboard | https://bms-store.netlify.app/admin |
+| Storefront | https://bms-cmu.pages.dev |
+| Staff dashboard | https://bms-cmu.pages.dev/admin |
 | API | https://bms-api-5cgw.onrender.com |
 
-The storefront and the dashboard are one Netlify site. They are still built
+Hosted on Cloudflare Pages (moved off Netlify when its free build minutes ran out). The storefront and the dashboard are one project. They are still built
 separately and combined by `scripts/assemble-site.mjs`, so a customer never
 downloads the dashboard bundle. The old `bms-staff.netlify.app` address
 redirects to `/admin`.
