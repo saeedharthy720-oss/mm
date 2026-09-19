@@ -1,19 +1,20 @@
 # The staff dashboard is no longer hosted on its own domain — it is served from
 # /admin on the storefront's site (see the netlify.toml at the repository root).
 #
-# This config exists only to keep the old bms-staff.netlify.app address working:
-# it publishes a placeholder and redirects every path to the new location, so
-# bookmarks and saved links don't simply break.
-#
+# This config exists only to keep the old bms-staff.netlify.app address working.
 # The dashboard itself is built by `npm run build:site` at the root.
+#
+# The redirect is written as a _redirects file rather than a [[redirects]] block
+# here: this project has Base/Package directory set to apps/staff in the Netlify
+# UI, and redirect blocks in this file were silently ignored, while _redirects
+# in the publish directory is always applied. The trailing "!" forces the rule
+# even though index.html exists.
 
 [build]
   base = "apps/staff"
-  command = "mkdir -p dist && printf '<!doctype html><meta charset=utf-8><title>Moved</title>' > dist/index.html"
+  command = """
+    mkdir -p dist && \
+    printf '/*  https://bms-store.netlify.app/admin/:splat  301!\\n' > dist/_redirects && \
+    printf '<!doctype html><meta charset=utf-8><meta http-equiv=refresh content="0;url=https://bms-store.netlify.app/admin/"><title>Moved</title><a href="https://bms-store.netlify.app/admin/">This dashboard has moved to /admin</a>' > dist/index.html
+  """
   publish = "dist"
-
-[[redirects]]
-  from = "/*"
-  to = "https://bms-store.netlify.app/admin/:splat"
-  status = 301
-  force = true
