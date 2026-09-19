@@ -15,6 +15,7 @@ import { OrdersPage } from "./orders/OrdersPage.js";
 import { ProductFormPage } from "./products/ProductFormPage.js";
 import { ProductsPage } from "./products/ProductsPage.js";
 import { SettingsPage } from "./settings/SettingsPage.js";
+import { StaffUsersPage } from "./users/StaffUsersPage.js";
 
 function IndexRedirect() {
   const { data: user } = useCurrentUser();
@@ -22,6 +23,7 @@ function IndexRedirect() {
   if (user?.permissions.includes("orders:view")) return <Navigate to="/orders" replace />;
   if (user?.permissions.includes("products:manage")) return <Navigate to="/products" replace />;
   if (user?.permissions.includes("categories:manage")) return <Navigate to="/categories" replace />;
+  if (user?.permissions.includes("users:manage")) return <Navigate to="/staff" replace />;
   if (user?.permissions.includes("settings:manage")) return <Navigate to="/settings" replace />;
 
   return null;
@@ -89,6 +91,15 @@ export function App() {
                     </RequirePermission>
                   }
                 />
+                <Route
+                    path="staff"
+                    element={
+                      <RequirePermission permission="users:manage">
+                        <StaffUsersPage />
+                      </RequirePermission>
+                    }
+                  />
+
                 <Route
                   path="settings"
                   element={

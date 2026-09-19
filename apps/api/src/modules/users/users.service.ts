@@ -22,7 +22,14 @@ function toPublicUser(user: {
 }
 
 export async function listUsers() {
-  const users = await prisma.user.findMany({ include: { role: true }, orderBy: { createdAt: "asc" } });
+  // Staff only. Customers share this table but register themselves and are not
+  // administered here; listing them would bury the handful of staff accounts
+  // in a list that grows with every shopper.
+  const users = await prisma.user.findMany({
+    where: { customerId: null },
+    include: { role: true },
+    orderBy: { createdAt: "asc" }
+  });
   return users.map(toPublicUser);
 }
 
@@ -50,6 +57,13 @@ export async function createUser(input: CreateUserInput) {
 export async function updateUser(id: string, input: UpdateUserInput) {
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError("User not found");
+
+  // Staff accounts never carry a customer profile. Promoting a shopper into
+  // staff here would produce an account that is both, which nothing else in
+  // the system expects.
+  if (existing.customerId) {
+    throw new ConflictError("This is a customer account and cannot be managed as staff");
+  }
 
   const roleId = input.roleKey
     ? (await prisma.role.findUniqueOrThrow({ where: { key: input.roleKey } })).id

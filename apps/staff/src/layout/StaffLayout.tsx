@@ -46,6 +46,11 @@ export function StaffLayout() {
                   {t("nav.categories")}
                 </NavLink>
               )}
+              {user?.permissions.includes("users:manage") && (
+                <NavLink to="/staff" className={navItemClass}>
+                  {t("nav.staff")}
+                </NavLink>
+              )}
               {user?.permissions.includes("settings:manage") && (
                 <NavLink to="/settings" className={navItemClass}>
                   {t("nav.settings")}

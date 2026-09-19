@@ -15,7 +15,8 @@
     "products": "Products",
     "categories": "Categories",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "staff": "Staff"
   },
   "common": {
     "save": "Save",
@@ -135,5 +136,24 @@
     "totalToCollect": "Total to collect",
     "alreadyPaid": "Already paid online",
     "signature": "Signature / Confirmation"
+  },
+  "staff": {
+    "title": "Staff accounts",
+    "addNew": "Add a staff member",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 8 characters. Share it with them directly — it cannot be viewed again.",
+    "role": "Role",
+    "roleAdmin": "Admin",
+    "roleEmployee": "Employee",
+    "adminHint": "Full access, including products, settings and staff accounts.",
+    "employeeHint": "Orders only — cannot reach products, settings or staff accounts.",
+    "addButton": "Create account",
+    "created": "{{name}} can now sign in.",
+    "you": "(you)",
+    "disabled": "Disabled",
+    "disable": "Disable",
+    "enable": "Enable"
   }
 }
