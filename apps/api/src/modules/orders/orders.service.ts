@@ -13,7 +13,9 @@ interface PaymentSession {
   amount: Prisma.Decimal;
 }
 
-function mergeDuplicateItems(input: CheckoutInput): CheckoutInput {
+// Exported for tests: these two carry the money arithmetic, where a mistake is
+// silent and expensive.
+export function mergeDuplicateItems(input: CheckoutInput): CheckoutInput {
   const quantityByProductId = new Map<string, number>();
   for (const item of input.items) {
     quantityByProductId.set(item.productId, (quantityByProductId.get(item.productId) ?? 0) + item.quantity);
@@ -64,7 +66,7 @@ async function loadAndValidateProducts(input: CheckoutInput) {
   return productById;
 }
 
-function computeTotals(input: CheckoutInput, productById: Map<string, ProductWithUnit>) {
+export function computeTotals(input: CheckoutInput, productById: Map<string, ProductWithUnit>) {
   let subtotal = new Prisma.Decimal(0);
   let deliveryChargeTotal = new Prisma.Decimal(0);
 
