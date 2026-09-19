@@ -86,5 +86,38 @@
     "loadFailed": "تعذّر التحميل",
     "loadFailedHint": "تحقّق من اتصالك بالإنترنت وحاول مرة أخرى.",
     "retry": "إعادة المحاولة"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "loginSubtitle": "الموظفون والزبائن يستخدمون النموذج نفسه.",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "name": "الاسم الكامل",
+    "phone": "رقم الهاتف",
+    "loginButton": "تسجيل الدخول",
+    "loggingIn": "جاري تسجيل الدخول…",
+    "loginFailed": "تعذّر تسجيل الدخول. تحقّق من البريد وكلمة المرور.",
+    "logout": "تسجيل الخروج",
+    "noAccount": "ليس لديك حساب؟",
+    "registerLink": "أنشئ حساباً",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "loginLink": "تسجيل الدخول",
+    "guestNote": "لا تحتاج حساباً للطلب — يمكنك إتمام الشراء كزائر.",
+    "registerTitle": "إنشاء حساب",
+    "registerSubtitle": "تابع طلباتك في مكان واحد.",
+    "registerButton": "إنشاء الحساب",
+    "registering": "جاري الإنشاء…",
+    "registerFailed": "تعذّر إنشاء الحساب.",
+    "phoneHint": "استخدم الرقم نفسه الذي طلبت به سابقاً لتظهر طلباتك في حسابك.",
+    "passwordHint": "{{count}} أحرف على الأقل."
+  },
+  "account": {
+    "ordersTitle": "طلباتي",
+    "greeting": "مسجّل الدخول باسم {{name}}",
+    "itemCount_one": "منتج واحد",
+    "itemCount_other": "{{count}} منتجات",
+    "noOrders": "لا توجد طلبات بعد",
+    "noOrdersHint": "ستظهر هنا الطلبات التي تقوم بها.",
+    "browseProducts": "تصفّح المنتجات"
   }
 }

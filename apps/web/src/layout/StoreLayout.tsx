@@ -1,7 +1,9 @@
 import { useLanguage } from "@bms/shared-i18n";
-import { Globe, ShoppingCart } from "lucide-react";
+import { isStaff } from "@bms/shared-types";
+import { Globe, LogIn, LogOut, ShoppingCart, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet } from "react-router-dom";
+import { useCurrentUser, useLogout } from "../auth/useAuth.js";
 import { useCart } from "../cart/CartContext.js";
 import { useCategories } from "../categories/useCategories.js";
 import { usePublicSettings } from "../settings/usePublicSettings.js";
@@ -12,6 +14,9 @@ export function StoreLayout() {
   const { data: categories = [] } = useCategories();
   const { data: profile } = usePublicSettings();
   const { itemCount } = useCart();
+  const { data: currentUser } = useCurrentUser();
+  const logout = useLogout();
+  const userIsStaff = isStaff(currentUser);
 
   const isArabic = i18n.language === "ar";
   const storeName = profile ? (isArabic ? profile.nameAr : profile.nameEn) : t("appName");
@@ -71,6 +76,45 @@ export function StoreLayout() {
               )}
               <span className="sr-only">{t("nav.cart")}</span>
             </Link>
+
+            {/* Staff who happen to be signed in get a way back to the dashboard;
+                customers get their orders. Signed out, this is just a sign-in
+                link — buying never requires an account. */}
+            {currentUser ? (
+              <div className="flex items-center gap-1">
+                <Link
+                  to={userIsStaff ? "#" : "/account/orders"}
+                  onClick={(event) => {
+                    if (userIsStaff) {
+                      event.preventDefault();
+                      window.location.href = "/admin/";
+                    }
+                  }}
+                  title={currentUser.name}
+                  className="flex h-10 items-center gap-2 rounded px-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                >
+                  <UserRound className="h-5 w-5" />
+                  <span className="hidden max-w-[10ch] truncate sm:inline">{currentUser.name}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => logout.mutate()}
+                  title={t("auth.logout")}
+                  className="flex h-10 w-10 items-center justify-center rounded text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="sr-only">{t("auth.logout")}</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="flex h-10 items-center gap-2 rounded px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+              >
+                <LogIn className="h-5 w-5" />
+                <span className="hidden sm:inline">{t("auth.loginButton")}</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>

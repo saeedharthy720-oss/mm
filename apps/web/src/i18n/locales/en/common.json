@@ -86,5 +86,38 @@
     "loadFailed": "Could not load",
     "loadFailedHint": "Check your connection and try again.",
     "retry": "Try again"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Staff and customers use the same form.",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name",
+    "phone": "Phone number",
+    "loginButton": "Sign in",
+    "loggingIn": "Signing in…",
+    "loginFailed": "Could not sign in. Check your email and password.",
+    "logout": "Sign out",
+    "noAccount": "No account yet?",
+    "registerLink": "Create one",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Sign in",
+    "guestNote": "You do not need an account to order — you can check out as a guest.",
+    "registerTitle": "Create an account",
+    "registerSubtitle": "Keep track of your orders in one place.",
+    "registerButton": "Create account",
+    "registering": "Creating…",
+    "registerFailed": "Could not create the account.",
+    "phoneHint": "Use the number from your previous orders and they will appear in your account.",
+    "passwordHint": "At least {{count}} characters."
+  },
+  "account": {
+    "ordersTitle": "My orders",
+    "greeting": "Signed in as {{name}}",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
+    "noOrders": "No orders yet",
+    "noOrdersHint": "Orders you place will show up here.",
+    "browseProducts": "Browse products"
   }
 }
