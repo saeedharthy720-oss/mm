@@ -6,6 +6,12 @@ import { z } from "zod";
 // Deliberately generous — a large construction order should still go through.
 export const MAX_LINE_QUANTITY = 10_000;
 
+// Card payment is switched off shop-wide. Enforced here rather than only in the
+// storefront, so a request that skips the UI is refused too. The Thawani
+// provider and the per-product card flag stay in place for when it returns;
+// flipping this back on is a one-line change.
+export const CARD_PAYMENT_ENABLED = false;
+
 export const checkoutSchema = z.object({
   customerName: z.string().min(1),
   customerPhone: z.string().min(6),
@@ -14,7 +20,11 @@ export const checkoutSchema = z.object({
   deliveryLng: z.number().optional(),
   deliveryNotes: z.string().optional(),
   orderNotes: z.string().optional(),
-  paymentMethod: z.enum(["card", "pay_on_delivery"]),
+  paymentMethod: CARD_PAYMENT_ENABLED
+    ? z.enum(["card", "pay_on_delivery"])
+    : z.literal("pay_on_delivery", {
+        errorMap: () => ({ message: "Card payment is not available at the moment. Please choose cash on delivery." })
+      }),
   items: z
     .array(
       z.object({

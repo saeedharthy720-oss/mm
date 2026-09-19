@@ -66,7 +66,18 @@
     "error": "حدث خطأ أثناء إتمام طلبك. يرجى المحاولة مرة أخرى.",
     "submitting": "جارٍ تقديم الطلب...",
     "placeOrder": "تقديم الطلب",
-    "orderSummary": "ملخص الطلب"
+    "orderSummary": "ملخص الطلب",
+    "country": "الدولة",
+    "governorate": "المحافظة",
+    "wilayat": "الولاية",
+    "selectGovernorate": "اختر المحافظة",
+    "selectWilayat": "اختر الولاية",
+    "selectGovernorateFirst": "اختر المحافظة أولاً",
+    "area": "القرية / المنطقة",
+    "areaPlaceholder": "مثال: الخوض",
+    "addressDetails": "تفاصيل إضافية (اختياري)",
+    "addressDetailsPlaceholder": "الشارع، المبنى، أقرب معلم…",
+    "codOnlyNote": "الدفع بالبطاقة غير متاح حالياً."
   },
   "order": {
     "notFound": "الطلب غير موجود.",

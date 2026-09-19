@@ -66,7 +66,18 @@
     "error": "Something went wrong placing your order. Please try again.",
     "submitting": "Placing order...",
     "placeOrder": "Place order",
-    "orderSummary": "Order summary"
+    "orderSummary": "Order summary",
+    "country": "Country",
+    "governorate": "Governorate",
+    "wilayat": "Wilayat",
+    "selectGovernorate": "Select a governorate",
+    "selectWilayat": "Select a wilayat",
+    "selectGovernorateFirst": "Choose a governorate first",
+    "area": "Village / area",
+    "areaPlaceholder": "e.g. Al Khoudh",
+    "addressDetails": "Further directions (optional)",
+    "addressDetailsPlaceholder": "Street, building, nearby landmark…",
+    "codOnlyNote": "Card payment is unavailable at the moment."
   },
   "order": {
     "notFound": "Order not found.",

@@ -1,9 +1,14 @@
-import { AlertCircle, CreditCard, Loader2, Truck } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { AlertCircle, Loader2, Truck } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router-dom";
+import { formatDeliveryAddress } from "@bms/shared-types";
 import { useCart } from "../cart/CartContext.js";
-import { LocationPicker } from "../checkout/LocationPicker.js";
+import {
+  OmanAddressPicker,
+  emptyOmanAddress,
+  type OmanAddress
+} from "../checkout/OmanAddressPicker.js";
 import { formatPrice } from "../lib/formatPrice.js";
 import { useCheckout } from "../orders/useCheckout.js";
 
@@ -20,22 +25,14 @@ export function CheckoutPage() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [deliveryAddressText, setDeliveryAddressText] = useState("");
-  const [deliveryLat, setDeliveryLat] = useState<number>();
-  const [deliveryLng, setDeliveryLng] = useState<number>();
+  const [address, setAddress] = useState<OmanAddress>(emptyOmanAddress);
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
 
-  const allowsCard = items.every((item) => item.allowCardPayment);
+  // Card payment is disabled shop-wide for now, so cash on delivery is the
+  // only method. The per-product card flag is left in place for when it returns.
   const allowsCod = items.every((item) => item.allowPayOnDelivery);
-  const availableMethods = useMemo(
-    () => [...(allowsCard ? (["card"] as const) : []), ...(allowsCod ? (["pay_on_delivery"] as const) : [])],
-    [allowsCard, allowsCod]
-  );
-
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "pay_on_delivery" | "">(
-    availableMethods[0] ?? ""
-  );
+  const paymentMethod = "pay_on_delivery" as const;
   const [orderPlaced, setOrderPlaced] = useState(false);
 
   if (items.length === 0 && !orderPlaced) {
@@ -44,14 +41,14 @@ export function CheckoutPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!paymentMethod) return;
+    if (!allowsCod) return;
 
     const result = await checkout.mutateAsync({
       customerName,
       customerPhone,
-      deliveryAddressText,
-      deliveryLat,
-      deliveryLng,
+      // Stored as one line so historical orders stay readable, and so the
+      // WhatsApp message and printed note need no reassembly.
+      deliveryAddressText: formatDeliveryAddress(address, isArabic ? "ar" : "en"),
       deliveryNotes: deliveryNotes || undefined,
       orderNotes: orderNotes || undefined,
       paymentMethod,
@@ -112,29 +109,7 @@ export function CheckoutPage() {
               </div>
             </div>
 
-            <div>
-              <label className={labelClass} htmlFor="deliveryAddress">
-                {t("checkout.address")}
-              </label>
-              <textarea
-                id="deliveryAddress"
-                required
-                rows={3}
-                value={deliveryAddressText}
-                onChange={(event) => setDeliveryAddressText(event.target.value)}
-                className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none ring-ring focus:ring-2"
-              />
-            </div>
-
-            <div>
-              <span className={labelClass}>{t("checkout.pinLocation")}</span>
-              <LocationPicker
-                onChange={(lat, lng) => {
-                  setDeliveryLat(lat);
-                  setDeliveryLng(lng);
-                }}
-              />
-            </div>
+            <OmanAddressPicker value={address} onChange={setAddress} />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -165,52 +140,21 @@ export function CheckoutPage() {
           <section className="space-y-3 rounded-xl border border-card-border bg-card p-5 shadow-sm">
             <h2 className="font-bold">{t("checkout.paymentMethod")}</h2>
 
-            {availableMethods.length === 0 ? (
+            {!allowsCod ? (
               <p className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 {t("checkout.noPaymentMethod")}
               </p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {allowsCard && (
-                  <label
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                      paymentMethod === "card"
-                        ? "border-secondary bg-secondary/10"
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      className="accent-[hsl(var(--secondary))]"
-                      checked={paymentMethod === "card"}
-                      onChange={() => setPaymentMethod("card")}
-                    />
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium">{t("checkout.card")}</span>
-                  </label>
-                )}
-
-                {allowsCod && (
-                  <label
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                      paymentMethod === "pay_on_delivery"
-                        ? "border-secondary bg-secondary/10"
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      className="accent-[hsl(var(--secondary))]"
-                      checked={paymentMethod === "pay_on_delivery"}
-                      onChange={() => setPaymentMethod("pay_on_delivery")}
-                    />
-                    <Truck className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium">{t("checkout.cod")}</span>
-                  </label>
-                )}
+              /* Cash on delivery is the only method while card payment is off.
+                 Shown as a statement rather than a single radio button, which
+                 would imply there is something to choose. */
+              <div className="flex items-center gap-3 rounded-lg border border-secondary bg-secondary/10 p-4">
+                <Truck className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">{t("checkout.cod")}</p>
+                  <p className="text-xs text-muted-foreground">{t("checkout.codOnlyNote")}</p>
+                </div>
               </div>
             )}
 
@@ -223,7 +167,7 @@ export function CheckoutPage() {
 
             <button
               type="submit"
-              disabled={!paymentMethod || checkout.isPending}
+              disabled={!allowsCod || checkout.isPending}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-secondary font-bold text-secondary-foreground shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
             >
               {checkout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}

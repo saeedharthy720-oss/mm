@@ -74,7 +74,10 @@
     "allowCard": "Allow card payment",
     "allowCod": "Allow pay on delivery",
     "images": "Images",
-    "video": "Video"
+    "video": "Video",
+    "cardDisabled": "(unavailable)",
+    "cardDisabledHint": "Card payment is switched off shop-wide, so this setting has no effect.",
+    "cardDisabledNotice": "Card payment is currently unavailable, so every order is cash on delivery. This setting is kept for when card payment is switched back on."
   },
   "settings": {
     "title": "Store settings",

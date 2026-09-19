@@ -19,6 +19,9 @@ const fieldClass =
   "h-11 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none ring-ring focus:ring-2";
 const labelClass = "mb-1.5 block text-sm font-medium";
 
+// Mirrors the API flag in orders.schemas.ts. Both must flip together.
+export const CARD_PAYMENT_ENABLED = false;
+
 const emptyForm = {
   sku: "",
   nameEn: "",
@@ -278,21 +281,46 @@ export function ProductFormPage() {
                 ["allowCardPayment", t("products.allowCard")],
                 ["allowPayOnDelivery", t("products.allowCod")]
               ] as const
-            ).map(([key, label]) => (
-              <label
-                key={key}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm transition-colors hover:bg-muted"
-              >
-                <input
-                  type="checkbox"
-                  checked={form[key]}
-                  onChange={(event) => update(key, event.target.checked)}
-                  className="accent-[hsl(var(--secondary))]"
-                />
-                {label}
-              </label>
-            ))}
+            ).map(([key, label]) => {
+              // Card payment is switched off shop-wide, so this toggle currently
+              // decides nothing. Disabled and labelled rather than hidden, so
+              // the setting is still visible for when card payment returns.
+              const disabled = key === "allowCardPayment" && !CARD_PAYMENT_ENABLED;
+
+              return (
+                <label
+                  key={key}
+                  title={disabled ? t("products.cardDisabledHint") : undefined}
+                  className={`flex items-center gap-2 rounded-lg border border-border p-3 text-sm transition-colors ${
+                    disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form[key]}
+                    disabled={disabled}
+                    onChange={(event) => update(key, event.target.checked)}
+                    className="accent-[hsl(var(--secondary))]"
+                  />
+                  <span>
+                    {label}
+                    {disabled && (
+                      <span className="ms-1 text-xs text-muted-foreground">
+                        {t("products.cardDisabled")}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              );
+            })}
           </div>
+
+          {!CARD_PAYMENT_ENABLED && (
+            <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-800">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {t("products.cardDisabledNotice")}
+            </p>
+          )}
 
           {saveError && (
             <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
