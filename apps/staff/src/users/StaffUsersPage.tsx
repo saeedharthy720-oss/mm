@@ -3,7 +3,13 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrentUser } from "../auth/useAuth.js";
 import { getErrorMessage } from "../lib/getErrorMessage.js";
-import { useCreateUser, useUpdateUser, useUsers, type StaffUser } from "./useUsers.js";
+import {
+  useAssignablePermissions,
+  useCreateUser,
+  useUpdateUser,
+  useUsers,
+  type StaffUser
+} from "./useUsers.js";
 
 const fieldClass =
   "h-11 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none ring-ring focus:ring-2";
@@ -16,6 +22,7 @@ export function StaffUsersPage() {
   const isArabic = i18n.language === "ar";
   const { data: currentUser } = useCurrentUser();
   const { data: users = [], isLoading } = useUsers();
+  const { data: permissions = [] } = useAssignablePermissions();
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
 
@@ -152,7 +159,7 @@ export function StaffUsersPage() {
                 key={staffUser.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-card-border bg-card p-4 shadow-sm"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold">
                     {staffUser.name}
                     {staffUser.role === "admin" && (
@@ -183,6 +190,55 @@ export function StaffUsersPage() {
                     {staffUser.isActive ? t("staff.disable") : t("staff.enable")}
                   </button>
                 )}
+
+                <div className="w-full border-t border-border pt-3">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    {t("staff.permissionsTitle")}
+                  </p>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {permissions.map((permission) => {
+                      const fromRole = staffUser.rolePermissions.includes(permission.key);
+                      const granted = staffUser.permissions.includes(permission.key);
+
+                      return (
+                        <label
+                          key={permission.key}
+                          title={fromRole ? t("staff.fromRoleHint") : (permission.description ?? undefined)}
+                          className={`flex items-start gap-2 rounded-lg border border-border p-2 text-sm ${
+                            fromRole ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={granted}
+                            // A permission the role already grants cannot be
+                            // taken away here — unticking it would appear to
+                            // work and change nothing.
+                            disabled={fromRole || updateUser.isPending}
+                            onChange={(event) =>
+                              updateUser.mutate({
+                                id: staffUser.id,
+                                extraPermissions: event.target.checked
+                                  ? [...staffUser.extraPermissions, permission.key]
+                                  : staffUser.extraPermissions.filter((key) => key !== permission.key)
+                              })
+                            }
+                            className="mt-0.5 accent-[hsl(var(--secondary))]"
+                          />
+                          <span>
+                            {t(`permissions.${permission.key}`, { defaultValue: permission.key })}
+                            {fromRole && (
+                              <span className="ms-1 text-xs text-muted-foreground">
+                                {t("staff.fromRole")}
+                              </span>
+                            )}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             );
           })

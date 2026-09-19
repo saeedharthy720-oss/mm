@@ -31,6 +31,7 @@ model Permission {
   description String?
 
   rolePermissions RolePermission[]
+  userPermissions UserPermission[]
 
   @@map("permissions")
 }
@@ -66,8 +67,25 @@ model User {
   customer           Customer?            @relation(fields: [customerId], references: [id])
   refreshTokens      RefreshToken[]
   orderStatusChanges OrderStatusHistory[]
+  // Permissions granted to this person on top of their role's. Lets one
+  // employee also manage products without inventing a role for one person.
+  extraPermissions   UserPermission[]
 
   @@map("users")
+}
+
+/// A permission granted directly to one user, in addition to their role's.
+/// Effective permissions are the union of the two; nothing here can take a
+/// permission away, so a role's grants are always the floor.
+model UserPermission {
+  userId       String @map("user_id")
+  permissionId String @map("permission_id")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+  @@map("user_permissions")
 }
 
 model RefreshToken {

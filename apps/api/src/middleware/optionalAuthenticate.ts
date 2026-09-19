@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { verifyAccessToken } from "../modules/auth/token.service.js";
+import { effectivePermissions, permissionInclude } from "../modules/users/permissions.js";
 
 export async function optionalAuthenticate(req: Request, _res: Response, next: NextFunction) {
   const token = req.cookies?.access_token;
@@ -10,7 +11,7 @@ export async function optionalAuthenticate(req: Request, _res: Response, next: N
     const payload = verifyAccessToken(token);
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      include: { role: { include: { rolePermissions: { include: { permission: true } } } } }
+      include: permissionInclude
     });
 
     if (user?.isActive) {
@@ -20,7 +21,7 @@ export async function optionalAuthenticate(req: Request, _res: Response, next: N
         name: user.name,
         roleKey: user.role.key,
         customerId: user.customerId,
-        permissions: user.role.rolePermissions.map((rp) => rp.permission.key)
+        permissions: effectivePermissions(user)
       };
     }
   } catch {

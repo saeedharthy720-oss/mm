@@ -1,5 +1,5 @@
 import { useLanguage } from "@bms/shared-i18n";
-import { Globe, LogOut } from "lucide-react";
+import { Globe, LogOut, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
 import { useCurrentUser, useLogout } from "../auth/useAuth.js";
@@ -63,6 +63,15 @@ export function StaffLayout() {
             <span className="hidden text-primary-foreground/80 sm:inline">
               {user?.name} · {user?.role}
             </span>
+
+            <a
+              href="/"
+              title={t("nav.backToStore")}
+              className="flex h-9 w-9 items-center justify-center rounded transition-colors hover:bg-primary-foreground/10"
+            >
+              <Store className="h-4 w-4" />
+              <span className="sr-only">{t("nav.backToStore")}</span>
+            </a>
 
             <button
               type="button"

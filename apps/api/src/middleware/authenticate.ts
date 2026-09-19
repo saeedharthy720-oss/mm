@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { UnauthorizedError } from "../errors/AppError.js";
 import { prisma } from "../lib/prisma.js";
 import { verifyAccessToken } from "../modules/auth/token.service.js";
+import { effectivePermissions, permissionInclude } from "../modules/users/permissions.js";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -29,7 +30,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      include: { role: { include: { rolePermissions: { include: { permission: true } } } } }
+      include: permissionInclude
     });
 
     if (!user || !user.isActive) throw new UnauthorizedError("Not authenticated");
@@ -40,7 +41,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       name: user.name,
       roleKey: user.role.key,
       customerId: user.customerId,
-      permissions: user.role.rolePermissions.map((rp) => rp.permission.key)
+      permissions: effectivePermissions(user)
     };
 
     next();

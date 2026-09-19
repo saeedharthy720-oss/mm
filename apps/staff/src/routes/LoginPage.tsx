@@ -1,13 +1,16 @@
 import { useLanguage } from "@bms/shared-i18n";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useLogin } from "../auth/useAuth.js";
 
 export function LoginPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const login = useLogin();
+  // The storefront is a different app on the same domain, so this is a plain
+  // link rather than a router navigation.
+  const BackArrow = i18n.language === "ar" ? ArrowRight : ArrowLeft;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -25,6 +28,14 @@ export function LoginPage() {
           </span>
           <h1 className="text-xl font-bold">{t("login.title")}</h1>
         </div>
+
+        <a
+          href="/"
+          className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-primary-foreground/80 transition-colors hover:text-secondary"
+        >
+          <BackArrow className="h-4 w-4" />
+          {t("nav.backToStore")}
+        </a>
 
         <form
           onSubmit={handleSubmit}

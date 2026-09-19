@@ -1,23 +1,29 @@
 import bcrypt from "bcryptjs";
-import { ConflictError, NotFoundError } from "../../errors/AppError.js";
+import { ConflictError, NotFoundError, ValidationError } from "../../errors/AppError.js";
 import { prisma } from "../../lib/prisma.js";
+import {
+  directPermissions,
+  effectivePermissions,
+  permissionInclude,
+  rolePermissions
+} from "./permissions.js";
 import type { CreateUserInput, UpdateUserInput } from "./users.schemas.js";
 
-function toPublicUser(user: {
-  id: string;
-  name: string;
-  email: string;
-  isActive: boolean;
-  createdAt: Date;
-  role: { key: string };
-}) {
+type UserWithPermissions = Parameters<typeof effectivePermissions>[0];
+
+function toPublicUser(user: UserWithPermissions & { id: string; name: string; email: string; isActive: boolean; createdAt: Date }) {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     isActive: user.isActive,
     role: user.role.key,
-    createdAt: user.createdAt
+    createdAt: user.createdAt,
+    // Split so the UI can show which permissions come with the role (fixed)
+    // and which were granted to this person (editable).
+    permissions: effectivePermissions(user),
+    rolePermissions: rolePermissions(user),
+    extraPermissions: directPermissions(user)
   };
 }
 
@@ -27,14 +33,24 @@ export async function listUsers() {
   // in a list that grows with every shopper.
   const users = await prisma.user.findMany({
     where: { customerId: null },
-    include: { role: true },
+    include: permissionInclude,
     orderBy: { createdAt: "asc" }
   });
   return users.map(toPublicUser);
 }
 
+export async function listAssignablePermissions() {
+  // The customer-only permission is meaningless on a staff account, which has
+  // no customer record for "own orders" to refer to.
+  const permissions = await prisma.permission.findMany({
+    where: { key: { not: "orders:view_own" } },
+    orderBy: { key: "asc" }
+  });
+  return permissions.map((permission) => ({ key: permission.key, description: permission.description }));
+}
+
 export async function getUserById(id: string) {
-  const user = await prisma.user.findUnique({ where: { id }, include: { role: true } });
+  const user = await prisma.user.findUnique({ where: { id }, include: permissionInclude });
   if (!user) throw new NotFoundError("User not found");
   return toPublicUser(user);
 }
@@ -48,10 +64,28 @@ export async function createUser(input: CreateUserInput) {
 
   const user = await prisma.user.create({
     data: { name: input.name, email: input.email, passwordHash, roleId: role.id },
-    include: { role: true }
+    include: permissionInclude
   });
 
   return toPublicUser(user);
+}
+
+/** Replaces a user's direct grants with exactly the keys given. */
+async function setExtraPermissions(userId: string, keys: string[]) {
+  const permissions = await prisma.permission.findMany({ where: { key: { in: keys } } });
+
+  const found = new Set(permissions.map((permission) => permission.key));
+  const unknown = keys.filter((key) => !found.has(key));
+  if (unknown.length > 0) {
+    throw new ValidationError(`Unknown permission(s): ${unknown.join(", ")}`);
+  }
+
+  await prisma.$transaction([
+    prisma.userPermission.deleteMany({ where: { userId } }),
+    prisma.userPermission.createMany({
+      data: permissions.map((permission) => ({ userId, permissionId: permission.id }))
+    })
+  ]);
 }
 
 export async function updateUser(id: string, input: UpdateUserInput) {
@@ -69,10 +103,14 @@ export async function updateUser(id: string, input: UpdateUserInput) {
     ? (await prisma.role.findUniqueOrThrow({ where: { key: input.roleKey } })).id
     : undefined;
 
+  if (input.extraPermissions) {
+    await setExtraPermissions(id, input.extraPermissions);
+  }
+
   const user = await prisma.user.update({
     where: { id },
     data: { name: input.name, isActive: input.isActive, roleId },
-    include: { role: true }
+    include: permissionInclude
   });
 
   return toPublicUser(user);

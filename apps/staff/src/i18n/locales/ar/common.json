@@ -16,7 +16,8 @@
     "categories": "الأصناف",
     "settings": "الإعدادات",
     "logout": "تسجيل الخروج",
-    "staff": "الموظفون"
+    "staff": "الموظفون",
+    "backToStore": "العودة إلى المتجر"
   },
   "common": {
     "save": "حفظ",
@@ -154,6 +155,17 @@
     "you": "(أنت)",
     "disabled": "معطّل",
     "disable": "تعطيل",
-    "enable": "تفعيل"
+    "enable": "تفعيل",
+    "permissionsTitle": "ما يستطيع هذا الشخص فعله",
+    "fromRole": "(من الصلاحية)",
+    "fromRoleHint": "تأتي مع الصلاحية ولا يمكن إزالتها هنا. غيّر الصلاحية بدلاً من ذلك."
+  },
+  "permissions": {
+    "orders:view": "عرض الطلبات",
+    "orders:manage": "تحديث وإلغاء الطلبات",
+    "products:manage": "إدارة المنتجات",
+    "categories:manage": "إدارة الأصناف",
+    "users:manage": "إدارة حسابات الموظفين",
+    "settings:manage": "تعديل إعدادات المتجر"
   }
 }

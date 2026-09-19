@@ -16,7 +16,8 @@
     "categories": "Categories",
     "settings": "Settings",
     "logout": "Log out",
-    "staff": "Staff"
+    "staff": "Staff",
+    "backToStore": "Back to store"
   },
   "common": {
     "save": "Save",
@@ -154,6 +155,17 @@
     "you": "(you)",
     "disabled": "Disabled",
     "disable": "Disable",
-    "enable": "Enable"
+    "enable": "Enable",
+    "permissionsTitle": "What this person can do",
+    "fromRole": "(from role)",
+    "fromRoleHint": "Comes with the role and cannot be removed here. Change the role instead."
+  },
+  "permissions": {
+    "orders:view": "View orders",
+    "orders:manage": "Update and cancel orders",
+    "products:manage": "Manage products",
+    "categories:manage": "Manage categories",
+    "users:manage": "Manage staff accounts",
+    "settings:manage": "Edit store settings"
   }
 }

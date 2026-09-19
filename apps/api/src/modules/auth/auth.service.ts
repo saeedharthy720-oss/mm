@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { ConflictError, UnauthorizedError } from "../../errors/AppError.js";
 import { prisma } from "../../lib/prisma.js";
+import { effectivePermissions, permissionInclude } from "../users/permissions.js";
 import type { LoginInput, RegisterInput } from "./auth.schemas.js";
 import {
   getTokenExpiryDate,
@@ -13,7 +14,7 @@ import {
 async function loadUserWithPermissions(userId: string) {
   return prisma.user.findUnique({
     where: { id: userId },
-    include: { role: { include: { rolePermissions: { include: { permission: true } } } } }
+    include: permissionInclude
   });
 }
 
@@ -26,7 +27,7 @@ function toPublicUser(user: NonNullable<Awaited<ReturnType<typeof loadUserWithPe
     // Present only for customers; the storefront uses it to decide whether to
     // offer an account area, and the dashboard to reject non-staff.
     customerId: user.customerId,
-    permissions: user.role.rolePermissions.map((rp) => rp.permission.key)
+    permissions: effectivePermissions(user)
   };
 }
 
@@ -86,7 +87,7 @@ export async function register(input: RegisterInput) {
         roleId: customerRole.id,
         customerId: customer.id
       },
-      include: { role: { include: { rolePermissions: { include: { permission: true } } } } }
+      include: permissionInclude
     });
   });
 
@@ -98,7 +99,7 @@ export async function register(input: RegisterInput) {
 export async function login(input: LoginInput) {
   const user = await prisma.user.findUnique({
     where: { email: input.email },
-    include: { role: { include: { rolePermissions: { include: { permission: true } } } } }
+    include: permissionInclude
   });
 
   if (!user || !user.isActive) throw new UnauthorizedError("Invalid email or password");

@@ -2,6 +2,10 @@ import type { Request, Response } from "express";
 import * as usersService from "./users.service.js";
 import { createUserSchema, updateUserSchema } from "./users.schemas.js";
 
+export async function listPermissionsHandler(_req: Request, res: Response) {
+  res.json({ permissions: await usersService.listAssignablePermissions() });
+}
+
 export async function listUsersHandler(_req: Request, res: Response) {
   res.json({ users: await usersService.listUsers() });
 }
