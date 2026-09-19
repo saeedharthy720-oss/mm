@@ -62,7 +62,7 @@ describe("buildWhatsAppMessage", () => {
     const message = buildWhatsAppMessage(order, false, "My Store");
 
     expect(message).toContain("ORD-20260917-0002");
-    expect(message).toContain("11.000 OMR × 2 = *22.000 OMR*");
+    expect(message).toContain("Cement × 2 (Bag) = 22.000 OMR");
     expect(message).toContain("Subtotal: 22.000 OMR");
     expect(message).toContain("Delivery: 1.000 OMR");
     expect(message).toContain("Total: 23.000 OMR*");
@@ -90,7 +90,7 @@ describe("buildWhatsAppMessage", () => {
     expect(buildWhatsAppMessage(order, false)).not.toContain("google.com/maps");
 
     const located = { ...order, deliveryLat: "23.58", deliveryLng: "58.38" } as OrderDetail;
-    expect(buildWhatsAppMessage(located, false)).toContain("google.com/maps?q=23.58,58.38");
+    expect(buildWhatsAppMessage(located, false)).toContain("maps.google.com/?q=23.58,58.38");
   });
 
   it("includes notes only when they were given", () => {
@@ -116,5 +116,87 @@ describe("whatsapp urls", () => {
 
     expect(url).toContain("%0A");
     expect(url).not.toContain("\n");
+  });
+});
+
+/**
+ * The failure this guards against: a 563-character Arabic order encoded to
+ * 2,661 URL characters and WhatsApp stopped opening it — the tab sat on
+ * "Loading…" with no error anywhere. Percent-encoding costs 6 characters per
+ * Arabic letter and 12 per emoji, so a message that looks short on screen is
+ * not short in a URL.
+ */
+describe("url length", () => {
+  const bigOrder = {
+    ...order,
+    deliveryAddressText: "سلطنة عُمان، محافظة مسقط، ولاية السيب، منطقة الخوض، خلف الجامع الكبير",
+    deliveryNotes: "الرجاء الاتصال قبل الوصول بنصف ساعة على الأقل حتى نجهز المكان",
+    orderNotes: "التسليم بعد صلاة العصر وليس قبل ذلك من فضلكم",
+    items: Array.from({ length: 12 }, (_, i) => ({
+      id: String(i),
+      productNameSnapshot: `إسمنت بورتلاندي عالي الجودة نوع ${i}`,
+      unitLabelSnapshot: "كيس",
+      quantity: 10,
+      unitPrice: "11",
+      deliveryChargeSnapshot: "1",
+      lineTotal: "110"
+    }))
+  } as unknown as OrderDetail;
+
+  it("keeps a normal Arabic order well under the limit", () => {
+    const url = buildWhatsAppUrl(order.customerPhone, buildWhatsAppMessage(order, true, "متجر مواد البناء"));
+
+    expect(url.length).toBeLessThan(1800);
+  });
+
+  it("caps a very large order instead of producing a URL that will not open", () => {
+    const message = buildWhatsAppMessage(bigOrder, true, "متجر مواد البناء");
+    const url = buildWhatsAppUrl(bigOrder.customerPhone, message);
+
+    expect(encodeURIComponent(message).length).toBeGreaterThan(1800);
+    expect(url.length).toBeLessThanOrEqual(1800);
+    expect(decodeURIComponent(url.split("?text=")[1]!)).toContain("…");
+  });
+
+  it("caps the WhatsApp Web link too", () => {
+    const message = buildWhatsAppMessage(bigOrder, true, "متجر مواد البناء");
+
+    expect(buildWhatsAppWebUrl(bigOrder.customerPhone, message).length).toBeLessThanOrEqual(1800);
+  });
+
+  it("never truncates mid-character", () => {
+    const message = buildWhatsAppMessage(bigOrder, true, "متجر مواد البناء");
+    const text = buildWhatsAppUrl(bigOrder.customerPhone, message).split("?text=")[1]!;
+
+    // A split surrogate pair or half-encoded byte throws here.
+    expect(() => decodeURIComponent(text)).not.toThrow();
+    expect(decodeURIComponent(text)).not.toContain("�");
+  });
+});
+
+describe("encoding", () => {
+  it("encodes exactly once", () => {
+    const url = buildWhatsAppUrl("97373394", "مرحبا 👋");
+
+    // Double encoding turns "%" into "%25" and WhatsApp shows the escapes.
+    expect(url).not.toContain("%25");
+    expect(decodeURIComponent(url.split("?text=")[1]!)).toBe("مرحبا 👋");
+  });
+
+  it.each(["a & b", "50% off", "#order", "what?", "a+b", "100% مرحبا"])(
+    "round-trips %s, which would otherwise break the query string",
+    (text) => {
+      const url = buildWhatsAppUrl("97373394", text);
+
+      expect(decodeURIComponent(url.split("?text=")[1]!)).toBe(text);
+    }
+  );
+
+  it("produces a phone segment of digits only", () => {
+    const url = buildWhatsAppUrl("+968 9737-3394", "hi");
+    const phoneSegment = url.slice("https://wa.me/".length, url.indexOf("?"));
+
+    expect(phoneSegment).toMatch(/^\d+$/);
+    expect(phoneSegment).toBe("96897373394");
   });
 });

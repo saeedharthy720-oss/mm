@@ -1,9 +1,19 @@
 import { formatPrice } from "../lib/formatPrice.js";
 import type { Order } from "./useOrder.js";
 
+/**
+ * Ceiling for the whole click-to-chat URL.
+ *
+ * Percent-encoding is brutal here: an Arabic letter costs 6 URL characters, an
+ * emoji 12, a box-drawing character 9. A visually modest order message came to
+ * 2,661 characters once encoded and WhatsApp simply stopped opening it — the
+ * tab sat on "Loading…" indefinitely rather than reporting anything.
+ */
+const MAX_URL_LENGTH = 1800;
+
 // Oman. Customers and shops alike write numbers in local 8-digit form, but
-// wa.me only accepts full international numbers — a bare local number opens a
-// WhatsApp page that never resolves.
+// click-to-chat needs the full international number as digits only — no "+",
+// spaces or leading zero.
 const DEFAULT_COUNTRY_CODE = "968";
 const LOCAL_NUMBER_LENGTH = 8;
 
@@ -22,67 +32,101 @@ export function toInternationalPhone(phone: string, countryCode = DEFAULT_COUNTR
   return `${countryCode}${digits.replace(/^0+/, "")}`;
 }
 
+/** Whether a number can plausibly open a chat, so callers can skip a dead link. */
+export function isUsablePhone(phone: string | null | undefined): boolean {
+  if (!phone) return false;
+  return /^\d{10,15}$/.test(toInternationalPhone(phone));
+}
+
 /**
  * The message a customer sends to the shop from the confirmation page.
  *
  * Written from the customer's side — "here is my order" — because that is who
- * is sending it. One tap puts the order in the shop's WhatsApp and leaves the
- * customer a copy in their own chat history, which is as close to an automatic
- * notification as free wa.me links allow.
+ * is sending it. Kept compact: decoration is expensive in a URL in a way it is
+ * not on a page, and an order that will not open is worth less than a plain one
+ * that will.
  */
-export function buildCustomerOrderMessage(
-  order: Order,
-  isArabic: boolean,
-  currency = "OMR"
-): string {
+export function buildCustomerOrderMessage(order: Order, isArabic: boolean, currency = "OMR"): string {
   const money = (value: string | number) => formatPrice(value, currency);
-  const divider = "──────────────";
   const lines: string[] = [];
 
   lines.push(
-    isArabic ? "مرحباً 👋 أرسل لكم تفاصيل طلبي:" : "Hello 👋 Here are my order details:",
+    isArabic ? "مرحباً 👋 تفاصيل طلبي:" : "Hello 👋 My order details:",
+    `${isArabic ? "طلب" : "Order"} *${order.orderNumber}*`,
+    `${isArabic ? "الاسم" : "Name"}: ${order.customerName}`,
     "",
-    `🧾 ${isArabic ? "رقم الطلب" : "Order number"}: *${order.orderNumber}*`,
-    `👤 ${isArabic ? "الاسم" : "Name"}: ${order.customerName}`,
-    "",
-    `🛒 *${isArabic ? "المنتجات" : "Items"}*`,
-    divider
+    `🛒 ${isArabic ? "المنتجات" : "Items"}`
   );
 
-  order.items.forEach((item, index) => {
+  for (const item of order.items) {
     lines.push(
-      `${index + 1}. ${item.productNameSnapshot}`,
-      `   ${isArabic ? "الكمية" : "Qty"}: ${item.quantity} (${item.unitLabelSnapshot})`,
-      `   ${money(item.unitPrice)} × ${item.quantity} = *${money(item.lineTotal)}*`
+      `• ${item.productNameSnapshot} × ${item.quantity} (${item.unitLabelSnapshot}) = ${money(item.lineTotal)}`
     );
-  });
+  }
 
   lines.push(
     "",
-    `💰 *${isArabic ? "الحساب" : "Summary"}*`,
-    divider,
-    `${isArabic ? "المجموع الفرعي" : "Subtotal"}: ${money(order.subtotal)}`,
-    `${isArabic ? "رسوم التوصيل" : "Delivery"}: ${money(order.deliveryChargeTotal)}`,
+    `${isArabic ? "المجموع" : "Subtotal"}: ${money(order.subtotal)}`,
+    `${isArabic ? "التوصيل" : "Delivery"}: ${money(order.deliveryChargeTotal)}`,
     `*${isArabic ? "الإجمالي" : "Total"}: ${money(order.total)}*`,
+    `${isArabic ? "الدفع" : "Payment"}: ${isArabic ? "الدفع عند الاستلام" : "Cash on delivery"}`,
     "",
-    `💳 ${isArabic ? "طريقة الدفع" : "Payment"}: ${isArabic ? "الدفع عند الاستلام" : "Cash on delivery"}`,
-    "",
-    `📍 *${isArabic ? "عنوان التوصيل" : "Delivery address"}*`,
-    order.deliveryAddressText
+    `📍 ${order.deliveryAddressText}`
   );
 
   if (order.deliveryNotes) {
-    lines.push("", `📝 ${isArabic ? "ملاحظات التوصيل" : "Delivery notes"}: ${order.deliveryNotes}`);
+    lines.push(`${isArabic ? "ملاحظات التوصيل" : "Delivery notes"}: ${order.deliveryNotes}`);
   }
   if (order.orderNotes) {
-    lines.push(`📝 ${isArabic ? "ملاحظات الطلب" : "Order notes"}: ${order.orderNotes}`);
+    lines.push(`${isArabic ? "ملاحظات الطلب" : "Order notes"}: ${order.orderNotes}`);
   }
-
-  lines.push("", isArabic ? "شكراً 🙏" : "Thank you 🙏");
 
   return lines.join("\n");
 }
 
+/**
+ * Trims a message so the finished URL stays under the cap.
+ *
+ * Measured on encoded length rather than character count, because for Arabic
+ * the two differ by roughly five times. Exported so the behaviour is testable.
+ */
+export function fitMessageToUrl(base: string, message: string, maxUrlLength = MAX_URL_LENGTH): string {
+  if (base.length + encodeURIComponent(message).length <= maxUrlLength) {
+    return message;
+  }
+
+  const ellipsis = "…";
+
+  // Step by code point, not by UTF-16 unit. An emoji occupies two units, so
+  // trimming one at a time can leave a lone surrogate — and encodeURIComponent
+  // throws URIError on that, turning a message that was merely too long into a
+  // crash.
+  const characters = Array.from(message);
+  let end = characters.length;
+
+  while (
+    end > 0 &&
+    base.length + encodeURIComponent(characters.slice(0, end).join("") + ellipsis).length > maxUrlLength
+  ) {
+    end -= 1;
+  }
+
+  let trimmed = characters.slice(0, end).join("");
+
+  // End on a whole line where that doesn't cost most of the message.
+  const lastBreak = trimmed.lastIndexOf("\n");
+  if (lastBreak > trimmed.length / 2) {
+    trimmed = trimmed.slice(0, lastBreak);
+  }
+
+  return trimmed + ellipsis;
+}
+
+/**
+ * The official click-to-chat URL. One function so the number is normalised and
+ * the message encoded exactly once, everywhere.
+ */
 export function buildWhatsAppUrl(phone: string, message: string): string {
-  return `https://wa.me/${toInternationalPhone(phone)}?text=${encodeURIComponent(message)}`;
+  const base = `https://wa.me/${toInternationalPhone(phone)}?text=`;
+  return base + encodeURIComponent(fitMessageToUrl(base, message));
 }

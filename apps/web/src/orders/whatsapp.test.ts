@@ -42,15 +42,15 @@ describe("buildCustomerOrderMessage", () => {
   it("is written from the customer's side, since they are the sender", () => {
     // The dashboard's message addresses the customer; this one is the customer
     // addressing the shop. Getting them the wrong way round reads as nonsense.
-    expect(buildCustomerOrderMessage(order, false)).toContain("Here are my order details");
-    expect(buildCustomerOrderMessage(order, true)).toContain("أرسل لكم تفاصيل طلبي");
+    expect(buildCustomerOrderMessage(order, false)).toContain("My order details");
+    expect(buildCustomerOrderMessage(order, true)).toContain("تفاصيل طلبي");
   });
 
   it("carries the order number, line maths and totals", () => {
     const message = buildCustomerOrderMessage(order, false);
 
     expect(message).toContain("ORD-20260919-0007");
-    expect(message).toContain("11.000 OMR × 2 = *22.000 OMR*");
+    expect(message).toContain("Cement × 2 (Bag) = 22.000 OMR");
     expect(message).toContain("Subtotal: 22.000 OMR");
     expect(message).toContain("Total: 23.000 OMR*");
   });
