@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../lib/apiClient.js";
 
 export interface StaffUser {
+  whatsappNumber: string | null;
+  receivesOrderNotifications: boolean;
   id: string;
   name: string;
   email: string;
@@ -63,7 +65,14 @@ export function useUsers() {
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { name: string; email: string; password: string; roleKey: string }) => {
+    mutationFn: async (input: {
+      name: string;
+      email: string;
+      password: string;
+      roleKey: string;
+      whatsappNumber?: string;
+      receivesOrderNotifications?: boolean;
+    }) => {
       const { data } = await apiClient.post<{ user: StaffUser }>("/api/v1/users", input);
       return data.user;
     },
@@ -83,10 +92,41 @@ export function useUpdateUser() {
       isActive?: boolean;
       roleKey?: string;
       extraPermissions?: string[];
+      whatsappNumber?: string;
+      receivesOrderNotifications?: boolean;
     }) => {
       const { data } = await apiClient.patch<{ user: StaffUser }>(`/api/v1/users/${id}`, input);
       return data.user;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: USERS_KEY })
+  });
+}
+
+export interface NotificationRecipient {
+  id: string;
+  name: string;
+  whatsappNumber: string;
+}
+
+/**
+ * Staff to forward a new order to. Reachable by anyone with orders:view, since
+ * whoever is working the queue needs it — not just admins.
+ */
+export function useNotificationRecipients() {
+  return useQuery({
+    queryKey: ["notification-recipients"],
+    queryFn: async () => {
+      try {
+        const { data } = await apiClient.get<{ recipients: NotificationRecipient[] }>(
+          "/api/v1/users/notification-recipients"
+        );
+        return data.recipients ?? [];
+      } catch {
+        // An API predating this endpoint answers 404; no recipients simply
+        // hides the forwarding row.
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000
   });
 }

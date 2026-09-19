@@ -9,6 +9,7 @@ import {
   MapPin,
   MessageCircle,
   Receipt,
+  Send,
   User
 } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +18,7 @@ import { Link, useParams } from "react-router-dom";
 import { formatPrice } from "../lib/formatPrice.js";
 import { STATUS_COLORS } from "./OrdersPage.js";
 import { usePublicSettings } from "../settings/usePublicSettings.js";
+import { useNotificationRecipients } from "../users/useUsers.js";
 import { useOrder, useUpdateOrderStatus } from "./useOrder.js";
 import { useOrderStatuses } from "./useOrderStatuses.js";
 import { buildWhatsAppMessage, buildWhatsAppUrl, buildWhatsAppWebUrl } from "./whatsapp.js";
@@ -28,6 +30,7 @@ export function OrderDetailPage() {
   const { data: order, isLoading } = useOrder(id);
   const { data: statuses = [] } = useOrderStatuses();
   const { data: storeProfile } = usePublicSettings();
+  const { data: recipients = [] } = useNotificationRecipients();
   const updateStatus = useUpdateOrderStatus(id!);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [note, setNote] = useState("");
@@ -172,6 +175,29 @@ export function OrderDetailPage() {
             {whatsappMessage}
           </pre>
         </details>
+
+        {/* Forwarding to colleagues. wa.me cannot deliver on its own, so this
+            is one tap per person rather than an automatic notification — the
+            admin chooses who appears here on the Staff page. */}
+        {recipients.length > 0 && (
+          <div className="rounded-lg border border-border bg-card p-3">
+            <p className="mb-2 text-sm font-medium text-muted-foreground">{t("orders.notifyStaff")}</p>
+            <div className="flex flex-wrap gap-2">
+              {recipients.map((recipient) => (
+                <a
+                  key={recipient.id}
+                  href={buildWhatsAppUrl(recipient.whatsappNumber, whatsappMessage)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {recipient.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">

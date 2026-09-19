@@ -63,6 +63,12 @@ model User {
   // they can do is decided by their role's permissions, as it already was.
   customerId String? @unique @map("customer_id")
 
+  // Staff WhatsApp number, and whether new orders should be forwarded to them.
+  // Kept per user rather than in settings so the list stays correct as people
+  // join and leave, instead of drifting from who actually works here.
+  whatsappNumber            String?  @map("whatsapp_number")
+  receivesOrderNotifications Boolean @default(false) @map("receives_order_notifications")
+
   role               Role                 @relation(fields: [roleId], references: [id])
   customer           Customer?            @relation(fields: [customerId], references: [id])
   refreshTokens      RefreshToken[]

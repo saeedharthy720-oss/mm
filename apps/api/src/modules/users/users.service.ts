@@ -11,7 +11,17 @@ import type { CreateUserInput, UpdateUserInput } from "./users.schemas.js";
 
 type UserWithPermissions = Parameters<typeof effectivePermissions>[0];
 
-function toPublicUser(user: UserWithPermissions & { id: string; name: string; email: string; isActive: boolean; createdAt: Date }) {
+function toPublicUser(
+  user: UserWithPermissions & {
+    id: string;
+    name: string;
+    email: string;
+    isActive: boolean;
+    createdAt: Date;
+    whatsappNumber: string | null;
+    receivesOrderNotifications: boolean;
+  }
+) {
   return {
     id: user.id,
     name: user.name,
@@ -19,6 +29,8 @@ function toPublicUser(user: UserWithPermissions & { id: string; name: string; em
     isActive: user.isActive,
     role: user.role.key,
     createdAt: user.createdAt,
+    whatsappNumber: user.whatsappNumber,
+    receivesOrderNotifications: user.receivesOrderNotifications,
     // Split so the UI can show which permissions come with the role (fixed)
     // and which were granted to this person (editable).
     permissions: effectivePermissions(user),
@@ -49,6 +61,26 @@ export async function listAssignablePermissions() {
   return permissions.map((permission) => ({ key: permission.key, description: permission.description }));
 }
 
+/**
+ * Staff who should be told about a new order. Returns names and numbers only:
+ * the order queue needs to forward a message, not to see staff emails, roles or
+ * account state, and this endpoint is reachable by every employee.
+ */
+export async function listNotificationRecipients() {
+  const users = await prisma.user.findMany({
+    where: {
+      customerId: null,
+      isActive: true,
+      receivesOrderNotifications: true,
+      whatsappNumber: { not: null }
+    },
+    select: { id: true, name: true, whatsappNumber: true },
+    orderBy: { name: "asc" }
+  });
+
+  return users.map((user) => ({ id: user.id, name: user.name, whatsappNumber: user.whatsappNumber! }));
+}
+
 export async function getUserById(id: string) {
   const user = await prisma.user.findUnique({ where: { id }, include: permissionInclude });
   if (!user) throw new NotFoundError("User not found");
@@ -63,7 +95,14 @@ export async function createUser(input: CreateUserInput) {
   const passwordHash = await bcrypt.hash(input.password, 10);
 
   const user = await prisma.user.create({
-    data: { name: input.name, email: input.email, passwordHash, roleId: role.id },
+    data: {
+      name: input.name,
+      email: input.email,
+      passwordHash,
+      roleId: role.id,
+      whatsappNumber: input.whatsappNumber || null,
+      receivesOrderNotifications: input.receivesOrderNotifications ?? false
+    },
     include: permissionInclude
   });
 
@@ -109,7 +148,14 @@ export async function updateUser(id: string, input: UpdateUserInput) {
 
   const user = await prisma.user.update({
     where: { id },
-    data: { name: input.name, isActive: input.isActive, roleId },
+    data: {
+      name: input.name,
+      isActive: input.isActive,
+      roleId,
+      // An empty string means "clear it", so only undefined is left alone.
+      whatsappNumber: input.whatsappNumber === undefined ? undefined : input.whatsappNumber || null,
+      receivesOrderNotifications: input.receivesOrderNotifications
+    },
     include: permissionInclude
   });
 

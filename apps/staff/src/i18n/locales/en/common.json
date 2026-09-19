@@ -117,7 +117,8 @@
     "openWhatsAppWeb": "WhatsApp Web",
     "copyMessage": "Copy message",
     "messageCopied": "Copied",
-    "previewMessage": "Preview the message"
+    "previewMessage": "Preview the message",
+    "notifyStaff": "Forward to staff"
   },
   "documents": {
     "print": "Print",
@@ -161,7 +162,10 @@
     "enable": "Enable",
     "permissionsTitle": "What this person can do",
     "fromRole": "(from role)",
-    "fromRoleHint": "Comes with the role and cannot be removed here. Change the role instead."
+    "fromRoleHint": "Comes with the role and cannot be removed here. Change the role instead.",
+    "notificationsTitle": "WhatsApp number and order notifications",
+    "receivesOrders": "Receives new orders",
+    "needsNumberHint": "Add a WhatsApp number first — there is nowhere to send to."
   },
   "permissions": {
     "orders:view": "View orders",

@@ -192,6 +192,49 @@ export function StaffUsersPage() {
                 )}
 
                 <div className="w-full border-t border-border pt-3">
+                  {/* wa.me cannot deliver on its own, so this decides who shows
+                      up as a one-tap forward on each order, not who gets an
+                      automatic message. */}
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    {t("staff.notificationsTitle")}
+                  </p>
+                  <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+                    <input
+                      type="tel"
+                      dir="ltr"
+                      defaultValue={staffUser.whatsappNumber ?? ""}
+                      placeholder="+968XXXXXXXX"
+                      onBlur={(event) => {
+                        const next = event.target.value.trim();
+                        if (next === (staffUser.whatsappNumber ?? "")) return;
+                        updateUser.mutate({ id: staffUser.id, whatsappNumber: next });
+                      }}
+                      className="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none ring-ring focus:ring-2"
+                    />
+                    <label
+                      title={!staffUser.whatsappNumber ? t("staff.needsNumberHint") : undefined}
+                      className={`flex items-center gap-2 rounded-lg border border-border px-3 text-sm ${
+                        staffUser.whatsappNumber ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed opacity-60"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={staffUser.receivesOrderNotifications}
+                        // Without a number there is nowhere to send, so the
+                        // toggle would promise something it cannot do.
+                        disabled={!staffUser.whatsappNumber || updateUser.isPending}
+                        onChange={(event) =>
+                          updateUser.mutate({
+                            id: staffUser.id,
+                            receivesOrderNotifications: event.target.checked
+                          })
+                        }
+                        className="accent-[hsl(var(--secondary))]"
+                      />
+                      {t("staff.receivesOrders")}
+                    </label>
+                  </div>
+
                   <p className="mb-2 text-xs font-medium text-muted-foreground">
                     {t("staff.permissionsTitle")}
                   </p>

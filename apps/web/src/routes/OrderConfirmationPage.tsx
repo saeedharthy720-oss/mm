@@ -1,8 +1,10 @@
-import { AlertCircle, CheckCircle2, Loader2, MapPin } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, MapPin, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { formatPrice } from "../lib/formatPrice.js";
+import { buildCustomerOrderMessage, buildWhatsAppUrl } from "../orders/whatsapp.js";
 import { useOrder } from "../orders/useOrder.js";
+import { usePublicSettings } from "../settings/usePublicSettings.js";
 
 export function OrderConfirmationPage() {
   const { t, i18n } = useTranslation();
@@ -11,6 +13,8 @@ export function OrderConfirmationPage() {
   const { data: order, isLoading } = useOrder(id);
   const paymentQuery = searchParams.get("payment");
   const isArabic = i18n.language === "ar";
+  const { data: profile } = usePublicSettings();
+  const storeWhatsApp = profile?.whatsappNumber?.trim();
 
   if (isLoading) {
     return (
@@ -53,6 +57,31 @@ export function OrderConfirmationPage() {
             {order.paymentMethod === "card" ? t("checkout.card") : t("checkout.cod")} · {order.paymentStatus}
           </span>
         </div>
+
+        {/* One tap delivers the order to the shop's WhatsApp and leaves the
+            customer a copy in their own chat. wa.me cannot send by itself, so
+            this is the closest thing to a notification without the paid API. */}
+        {storeWhatsApp ? (
+          <div className="mt-5">
+            <a
+              href={buildWhatsAppUrl(
+                storeWhatsApp,
+                buildCustomerOrderMessage(order, isArabic, profile?.currency)
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] font-bold text-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <MessageCircle className="h-5 w-5" />
+              {t("order.sendOnWhatsApp")}
+            </a>
+            <p className="mt-2 text-xs text-muted-foreground">{t("order.sendOnWhatsAppHint")}</p>
+          </div>
+        ) : (
+          // Without a store number there is nowhere to send it. Saying so beats
+          // a button that opens an empty WhatsApp page.
+          <p className="mt-5 text-xs text-muted-foreground">{t("order.noStoreWhatsApp")}</p>
+        )}
       </div>
 
       <div className="space-y-2 rounded-xl border border-card-border bg-card p-5 shadow-sm">

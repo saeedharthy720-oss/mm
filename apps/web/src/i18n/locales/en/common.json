@@ -90,7 +90,10 @@
     "paymentStatus": "Payment status",
     "items": "Items",
     "deliverTo": "Deliver to",
-    "deliveryNotes": "Delivery notes"
+    "deliveryNotes": "Delivery notes",
+    "sendOnWhatsApp": "Send my order on WhatsApp",
+    "sendOnWhatsAppHint": "Opens WhatsApp with your order ready to send to the shop.",
+    "noStoreWhatsApp": "The shop has not published a WhatsApp number yet."
   },
   "common": {
     "delete": "Remove",

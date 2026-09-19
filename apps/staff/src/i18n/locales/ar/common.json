@@ -117,7 +117,8 @@
     "openWhatsAppWeb": "واتساب ويب",
     "copyMessage": "نسخ الرسالة",
     "messageCopied": "تم النسخ",
-    "previewMessage": "معاينة الرسالة"
+    "previewMessage": "معاينة الرسالة",
+    "notifyStaff": "إرسال إلى الموظفين"
   },
   "documents": {
     "print": "طباعة",
@@ -161,7 +162,10 @@
     "enable": "تفعيل",
     "permissionsTitle": "ما يستطيع هذا الشخص فعله",
     "fromRole": "(من الصلاحية)",
-    "fromRoleHint": "تأتي مع الصلاحية ولا يمكن إزالتها هنا. غيّر الصلاحية بدلاً من ذلك."
+    "fromRoleHint": "تأتي مع الصلاحية ولا يمكن إزالتها هنا. غيّر الصلاحية بدلاً من ذلك.",
+    "notificationsTitle": "رقم الواتساب وإشعارات الطلبات",
+    "receivesOrders": "يستلم الطلبات الجديدة",
+    "needsNumberHint": "أضف رقم واتساب أولاً — لا يوجد مكان للإرسال إليه."
   },
   "permissions": {
     "orders:view": "عرض الطلبات",

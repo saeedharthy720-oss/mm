@@ -90,7 +90,10 @@
     "paymentStatus": "حالة الدفع",
     "items": "المنتجات",
     "deliverTo": "التوصيل إلى",
-    "deliveryNotes": "ملاحظات التوصيل"
+    "deliveryNotes": "ملاحظات التوصيل",
+    "sendOnWhatsApp": "أرسل طلبي عبر واتساب",
+    "sendOnWhatsAppHint": "يفتح واتساب وطلبك جاهز للإرسال إلى المتجر.",
+    "noStoreWhatsApp": "لم يضف المتجر رقم واتساب بعد."
   },
   "common": {
     "delete": "إزالة",
