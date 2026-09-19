@@ -5,8 +5,20 @@
 | Part | URL |
 |---|---|
 | Storefront | https://bms-store.netlify.app |
-| Staff dashboard | https://bms-staff.netlify.app |
+| Staff dashboard | https://bms-store.netlify.app/admin |
 | API | https://bms-api-5cgw.onrender.com |
+
+The storefront and the dashboard are one Netlify site. They are still built
+separately and combined by `scripts/assemble-site.mjs`, so a customer never
+downloads the dashboard bundle. The old `bms-staff.netlify.app` address
+redirects to `/admin`.
+
+**Every Netlify build setting must be left empty** — Base directory, Package
+directory, Build command and Publish directory. A value in any of them makes
+Netlify read that folder's `netlify.toml` instead of the one at the repository
+root, and only the root config builds both apps. A stale `apps/web` in
+*Package directory* is what silently kept serving the storefront alone at
+`/admin`.
 
 Four services, all on free tiers:
 
