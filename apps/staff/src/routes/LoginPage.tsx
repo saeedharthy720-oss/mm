@@ -23,9 +23,7 @@ export function LoginPage() {
     <div className="flex min-h-[100dvh] items-center justify-center bg-primary p-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3 text-primary-foreground">
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-lg font-bold text-secondary-foreground">
-            BM
-          </span>
+          <img src="/admin/logo.png" alt="" width={72} height={72} className="h-16 w-16 rounded-full" />
           <h1 className="text-xl font-bold">{t("login.title")}</h1>
         </div>
 

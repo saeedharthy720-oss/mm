@@ -26,10 +26,16 @@ export function StoreLayout() {
     <div className="flex min-h-[100dvh] flex-col bg-background">
       <header className="sticky top-0 z-50 border-b border-primary/20 bg-primary text-primary-foreground shadow-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <span className="flex h-8 w-8 items-center justify-center rounded bg-secondary font-bold text-secondary-foreground">
-              BM
-            </span>
+          <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
+            {/* The mark already carries a dark circular ground, so it sits on the
+                near-black header without a plate behind it. */}
+            <img
+              src="/logo.png"
+              alt={storeName}
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-full"
+            />
             <span className="hidden text-lg font-bold sm:inline-block">{storeName}</span>
           </Link>
 

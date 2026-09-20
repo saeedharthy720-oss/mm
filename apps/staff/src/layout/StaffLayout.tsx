@@ -23,9 +23,8 @@ export function StaffLayout() {
       <header className="sticky top-0 z-50 bg-primary text-primary-foreground shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-secondary text-sm font-bold text-secondary-foreground">
-              BM
-            </span>
+            {/* The mark carries its own dark ground, so no plate behind it. */}
+            <img src="/admin/logo.png" alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-full" />
             <span className="hidden shrink-0 rounded bg-primary-foreground/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:inline">
               {t("nav.staffBadge")}
             </span>
