@@ -21,7 +21,9 @@
     "db:studio": "npm run db:studio --workspace=apps/api",
     "build:site": "npm run build:web && npm run build:staff && node scripts/assemble-site.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "demo:seed": "node scripts/demo/seed-demo.mjs",
+    "demo:images": "node scripts/demo/seed-images.mjs"
   },
   "devDependencies": {
     "vitest": "^5.0.1"
