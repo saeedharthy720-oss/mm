@@ -37,3 +37,9 @@ export async function updateOrderStatusHandler(req: Request, res: Response) {
   const order = await ordersService.updateOrderStatus(req.params.id!, input, req.user!.id);
   res.json({ order });
 }
+
+export async function deleteOrderHandler(req: Request, res: Response) {
+  // Returns a body rather than 204: whether stock went back is the one thing
+  // the person who pressed delete needs told, and it is decided server-side.
+  res.json(await ordersService.deleteOrder(req.params.id!));
+}

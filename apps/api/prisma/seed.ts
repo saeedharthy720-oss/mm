@@ -8,6 +8,7 @@ const PERMISSIONS = [
   { key: "categories:manage", description: "Create, edit, delete, reorder categories" },
   { key: "orders:manage", description: "Change order status, cancel orders" },
   { key: "orders:view", description: "View orders" },
+  { key: "orders:delete", description: "Permanently delete orders" },
   { key: "users:manage", description: "Manage staff users and roles" },
   { key: "settings:manage", description: "Edit store settings" },
   { key: "orders:view_own", description: "View one's own orders as a customer" }

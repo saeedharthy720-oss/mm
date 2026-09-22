@@ -9,6 +9,9 @@ export const PERMISSION_KEYS = {
   CATEGORIES_MANAGE: "categories:manage",
   ORDERS_MANAGE: "orders:manage",
   ORDERS_VIEW: "orders:view",
+  // Separate from ORDERS_MANAGE on purpose: changing a status is everyday work,
+  // erasing an order is not, and the two should not travel together by default.
+  ORDERS_DELETE: "orders:delete",
   USERS_MANAGE: "users:manage",
   SETTINGS_MANAGE: "settings:manage",
   ORDERS_VIEW_OWN: "orders:view_own"

@@ -123,7 +123,16 @@
     "copyMessage": "Copy message",
     "messageCopied": "Copied",
     "previewMessage": "Preview the message",
-    "notifyStaff": "Forward to staff"
+    "notifyStaff": "Forward to staff",
+    "deleteOrder": "Delete this order",
+    "deleteConfirmTitle": "Delete this order permanently?",
+    "deleteConfirmBody": "The order, its items and its whole status history are removed for good. This cannot be undone.",
+    "deleteRestoresStock": "The items on this order go back into stock.",
+    "deleteKeepsStock": "Stock is not changed — this order is no longer holding any.",
+    "deleteConfirm": "Yes, delete it",
+    "deleteCancel": "Keep it",
+    "deleting": "Deleting...",
+    "deleteFailed": "The order could not be deleted. Please try again."
   },
   "documents": {
     "print": "Print",
@@ -178,6 +187,7 @@
     "products:manage": "Manage products",
     "categories:manage": "Manage categories",
     "users:manage": "Manage staff accounts",
-    "settings:manage": "Edit store settings"
+    "settings:manage": "Edit store settings",
+    "orders:delete": "Delete orders permanently"
   }
 }

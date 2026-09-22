@@ -297,6 +297,49 @@ export async function listOrders(query: ListOrdersQuery) {
   return { items, page: query.page, pageSize: query.pageSize, total };
 }
 
+const CANCELLED = "cancelled";
+const DELIVERED = "delivered";
+
+/**
+ * Which way stock has to move for a status change. Exported for tests: the
+ * arithmetic is silent when it is wrong, and inventory that drifts by a few
+ * units per week is only noticed months later.
+ *
+ * Cancelling returns the goods to the shelf. Reversing a cancellation has to
+ * take them off it again — without that, cancel → reopen → cancel credits the
+ * same stock twice and the count climbs on its own.
+ */
+export function stockMovementForStatusChange(fromKey: string, toKey: string): "return" | "deduct" | "none" {
+  if (fromKey === toKey) return "none";
+  if (toKey === CANCELLED) return "return";
+  if (fromKey === CANCELLED) return "deduct";
+  return "none";
+}
+
+/**
+ * Whether deleting an order in this status has to put its stock back.
+ *
+ * A cancelled order already returned its stock when it was cancelled, and a
+ * delivered order's goods physically left the shop — neither is affected by a
+ * record being removed. Every other status still has stock deducted on this
+ * order's behalf, so deleting it must release that hold or inventory silently
+ * shrinks by the size of the order.
+ */
+export function deletionRestoresStock(statusKey: string): boolean {
+  return statusKey !== CANCELLED && statusKey !== DELIVERED;
+}
+
+/** Decrements without ever going negative, matching how checkout treats stock. */
+async function deductStock(tx: Prisma.TransactionClient, productId: string, quantity: number) {
+  const decremented = await tx.product.updateMany({
+    where: { id: productId, quantityAvailable: { gte: quantity } },
+    data: { quantityAvailable: { decrement: quantity } }
+  });
+  if (decremented.count === 0) {
+    await tx.product.update({ where: { id: productId }, data: { quantityAvailable: 0 } });
+  }
+}
+
 export async function updateOrderStatus(orderId: string, input: UpdateOrderStatusInput, changedByUserId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true, status: true } });
   if (!order) throw new NotFoundError("Order not found");
@@ -304,17 +347,21 @@ export async function updateOrderStatus(orderId: string, input: UpdateOrderStatu
   const newStatus = await prisma.orderStatus.findUnique({ where: { key: input.statusKey } });
   if (!newStatus) throw new BadRequestError(`Unknown status: ${input.statusKey}`);
 
-  const isCancelling = newStatus.key === "cancelled" && order.status.key !== "cancelled";
+  const movement = stockMovementForStatusChange(order.status.key, newStatus.key);
 
   return prisma.$transaction(async (tx) => {
-    if (isCancelling) {
-      for (const item of order.items) {
-        if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { quantityAvailable: { increment: item.quantity } }
-          });
-        }
+    for (const item of order.items) {
+      // A null productId means the product was deleted; there is no stock
+      // figure left to move.
+      if (!item.productId || movement === "none") continue;
+
+      if (movement === "return") {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { quantityAvailable: { increment: item.quantity } }
+        });
+      } else {
+        await deductStock(tx, item.productId, item.quantity);
       }
     }
 
@@ -332,4 +379,43 @@ export async function updateOrderStatus(orderId: string, input: UpdateOrderStatu
       }
     });
   });
+}
+
+/**
+ * Removes an order and everything hanging off it. Items, payments and status
+ * history cascade from the order row, so this is genuinely gone afterwards —
+ * there is no recovering it from the dashboard, which is why it sits behind its
+ * own permission rather than orders:manage.
+ *
+ * Returns what was removed so the caller can say so, including whether stock
+ * went back, because that is the part a shop owner needs to know about.
+ */
+export async function deleteOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, status: true }
+  });
+  if (!order) throw new NotFoundError("Order not found");
+
+  const restoresStock = deletionRestoresStock(order.status.key);
+
+  await prisma.$transaction(async (tx) => {
+    if (restoresStock) {
+      for (const item of order.items) {
+        if (!item.productId) continue;
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { quantityAvailable: { increment: item.quantity } }
+        });
+      }
+    }
+
+    await tx.order.delete({ where: { id: orderId } });
+  });
+
+  return {
+    orderNumber: order.orderNumber,
+    stockRestored: restoresStock,
+    itemsRemoved: order.items.length
+  };
 }

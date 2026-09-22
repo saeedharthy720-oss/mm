@@ -5,6 +5,7 @@ export type PermissionKey =
   | "categories:manage"
   | "orders:manage"
   | "orders:view"
+  | "orders:delete"
   | "users:manage"
   | "settings:manage"
   | "orders:view_own";
@@ -21,6 +22,7 @@ export const STAFF_PERMISSIONS: readonly PermissionKey[] = [
   "categories:manage",
   "orders:manage",
   "orders:view",
+  "orders:delete",
   "users:manage",
   "settings:manage"
 ];

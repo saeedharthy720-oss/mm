@@ -6,6 +6,7 @@ import { authorize } from "../../middleware/authorize.js";
 import { checkoutRateLimiter } from "../../middleware/rateLimit.js";
 import {
   checkoutHandler,
+  deleteOrderHandler,
   getOrderHandler,
   listOrdersHandler,
   listOwnOrdersHandler,
@@ -29,4 +30,10 @@ ordersRouter.patch(
   authenticate,
   authorize(PERMISSION_KEYS.ORDERS_MANAGE),
   asyncHandler(updateOrderStatusHandler)
+);
+ordersRouter.delete(
+  "/:id",
+  authenticate,
+  authorize(PERMISSION_KEYS.ORDERS_DELETE),
+  asyncHandler(deleteOrderHandler)
 );

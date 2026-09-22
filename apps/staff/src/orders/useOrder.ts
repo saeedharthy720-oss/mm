@@ -51,6 +51,31 @@ export function useOrder(id: string | undefined) {
   });
 }
 
+export interface DeleteOrderResult {
+  orderNumber: string;
+  /** Whether the order's quantities went back into stock. Decided server-side. */
+  stockRestored: boolean;
+  itemsRemoved: number;
+}
+
+export function useDeleteOrder(orderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await apiClient.delete<DeleteOrderResult>(`/api/v1/orders/${orderId}`);
+      return data;
+    },
+    onSuccess: () => {
+      // The order is gone, so its cached detail has to go with it — leaving it
+      // behind would let a stale copy render if the route is revisited.
+      queryClient.removeQueries({ queryKey: ["orders", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["orders"], exact: false });
+      // Stock changed for most deletions, so the product lists are stale too.
+      queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
+    }
+  });
+}
+
 export function useUpdateOrderStatus(orderId: string) {
   const queryClient = useQueryClient();
   return useMutation({

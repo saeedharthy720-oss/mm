@@ -123,7 +123,16 @@
     "copyMessage": "نسخ الرسالة",
     "messageCopied": "تم النسخ",
     "previewMessage": "معاينة الرسالة",
-    "notifyStaff": "إرسال إلى الموظفين"
+    "notifyStaff": "إرسال إلى الموظفين",
+    "deleteOrder": "حذف هذا الطلب",
+    "deleteConfirmTitle": "حذف الطلب نهائياً؟",
+    "deleteConfirmBody": "سيُحذف الطلب وأصنافه وسجل حالاته بالكامل ولا يمكن التراجع عن ذلك.",
+    "deleteRestoresStock": "ستعود كميات هذا الطلب إلى المخزون.",
+    "deleteKeepsStock": "لن يتغير المخزون — هذا الطلب لم يعد يحجز أي كمية.",
+    "deleteConfirm": "نعم، احذفه",
+    "deleteCancel": "الإبقاء عليه",
+    "deleting": "جارٍ الحذف...",
+    "deleteFailed": "تعذّر حذف الطلب. حاول مرة أخرى."
   },
   "documents": {
     "print": "طباعة",
@@ -178,6 +187,7 @@
     "products:manage": "إدارة المنتجات",
     "categories:manage": "إدارة الأصناف",
     "users:manage": "إدارة حسابات الموظفين",
-    "settings:manage": "تعديل إعدادات المتجر"
+    "settings:manage": "تعديل إعدادات المتجر",
+    "orders:delete": "حذف الطلبات نهائياً"
   }
 }

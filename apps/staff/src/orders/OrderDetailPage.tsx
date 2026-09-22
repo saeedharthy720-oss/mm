@@ -10,33 +10,51 @@ import {
   MessageCircle,
   Receipt,
   Send,
+  Trash2,
+  TriangleAlert,
   User
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatPrice } from "../lib/formatPrice.js";
 import { STATUS_COLORS } from "./OrdersPage.js";
+import { useCurrentUser } from "../auth/useAuth.js";
 import { usePublicSettings } from "../settings/usePublicSettings.js";
 import { useNotificationRecipients } from "../users/useUsers.js";
-import { useOrder, useUpdateOrderStatus } from "./useOrder.js";
+import { useDeleteOrder, useOrder, useUpdateOrderStatus } from "./useOrder.js";
 import { useOrderStatuses } from "./useOrderStatuses.js";
 import { buildWhatsAppMessage, buildWhatsAppUrl, buildWhatsAppWebUrl } from "./whatsapp.js";
+
+/**
+ * Statuses where deleting will not move stock: a cancelled order already gave
+ * its stock back, and a delivered order's goods have left the shop.
+ *
+ * This is only for the warning shown before confirming — the server decides
+ * what actually happens and reports it back, so the two cannot disagree in a
+ * way that changes the data.
+ */
+const STATUSES_WITHOUT_HELD_STOCK = ["cancelled", "delivered"];
 
 export function OrderDetailPage() {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const isArabic = i18n.language === "ar";
   const { data: order, isLoading } = useOrder(id);
   const { data: statuses = [] } = useOrderStatuses();
   const { data: storeProfile } = usePublicSettings();
   const { data: recipients = [] } = useNotificationRecipients();
+  const { data: currentUser } = useCurrentUser();
   const updateStatus = useUpdateOrderStatus(id!);
+  const deleteOrder = useDeleteOrder(id!);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [note, setNote] = useState("");
   const [copied, setCopied] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const BackArrow = isArabic ? ArrowRight : ArrowLeft;
+  const canDelete = Boolean(currentUser?.permissions.includes("orders:delete"));
 
   if (isLoading) {
     return (
@@ -308,6 +326,64 @@ export function OrderDetailPage() {
           ))}
         </ol>
       </div>
+
+      {/* Deleting is destructive and irreversible, so it sits last, behind its
+          own permission, and behind a confirmation that spells out what goes
+          and what happens to the stock. Cancelling an order is the reversible
+          option and stays the obvious one above. */}
+      {canDelete && (
+        <div className="rounded-xl border border-destructive/30 bg-card p-5 shadow-sm">
+          {confirmingDelete ? (
+            <div className="space-y-3">
+              <p className="flex items-start gap-2 font-bold text-destructive">
+                <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" />
+                {t("orders.deleteConfirmTitle")}
+              </p>
+              <p className="text-sm text-muted-foreground">{t("orders.deleteConfirmBody")}</p>
+              <p className="text-sm text-muted-foreground">
+                {STATUSES_WITHOUT_HELD_STOCK.includes(order.status.key)
+                  ? t("orders.deleteKeepsStock")
+                  : t("orders.deleteRestoresStock")}
+              </p>
+
+              {deleteOrder.isError && (
+                <p className="text-sm font-medium text-destructive">{t("orders.deleteFailed")}</p>
+              )}
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  disabled={deleteOrder.isPending}
+                  onClick={() =>
+                    deleteOrder.mutate(undefined, { onSuccess: () => navigate("/orders", { replace: true }) })
+                  }
+                  className="flex h-11 items-center justify-center gap-2 rounded-lg bg-destructive font-bold text-destructive-foreground shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
+                >
+                  {deleteOrder.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {deleteOrder.isPending ? t("orders.deleting") : t("orders.deleteConfirm")}
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteOrder.isPending}
+                  onClick={() => setConfirmingDelete(false)}
+                  className="flex h-11 items-center justify-center rounded-lg border border-border bg-card text-sm font-medium transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+                >
+                  {t("orders.deleteCancel")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-destructive/40 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("orders.deleteOrder")}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

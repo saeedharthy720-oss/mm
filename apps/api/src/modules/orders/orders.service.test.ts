@@ -1,6 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
-import { computeTotals, mergeDuplicateItems } from "./orders.service.js";
+import {
+  computeTotals,
+  deletionRestoresStock,
+  mergeDuplicateItems,
+  stockMovementForStatusChange
+} from "./orders.service.js";
 import type { CheckoutInput } from "./orders.schemas.js";
 
 type ProductWithUnit = Parameters<typeof computeTotals>[1] extends Map<string, infer P> ? P : never;
@@ -140,5 +145,55 @@ describe("computeTotals", () => {
     const { total } = computeTotals(checkout([{ productId: "a", quantity: 5 }]), products);
 
     expect(total.toString()).toBe("0");
+  });
+});
+
+/**
+ * Stock is taken out of inventory at checkout and stays out for as long as the
+ * order is live. These two decide when it comes back. Both are silent when
+ * wrong — nothing errors, the count is just quietly off — so they are pinned
+ * here rather than left to the integration path.
+ */
+describe("stockMovementForStatusChange", () => {
+  it("returns stock to the shelf when an order is cancelled", () => {
+    expect(stockMovementForStatusChange("processing", "cancelled")).toBe("return");
+    expect(stockMovementForStatusChange("new", "cancelled")).toBe("return");
+    expect(stockMovementForStatusChange("out_for_delivery", "cancelled")).toBe("return");
+  });
+
+  it("takes stock off the shelf again when a cancellation is reversed", () => {
+    // Without this, cancel → reopen → cancel credits the same goods twice and
+    // the stock figure climbs on its own.
+    expect(stockMovementForStatusChange("cancelled", "processing")).toBe("deduct");
+    expect(stockMovementForStatusChange("cancelled", "new")).toBe("deduct");
+  });
+
+  it("leaves stock alone for ordinary progress through the statuses", () => {
+    expect(stockMovementForStatusChange("new", "processing")).toBe("none");
+    expect(stockMovementForStatusChange("processing", "ready_for_delivery")).toBe("none");
+    expect(stockMovementForStatusChange("ready_for_delivery", "out_for_delivery")).toBe("none");
+    expect(stockMovementForStatusChange("out_for_delivery", "delivered")).toBe("none");
+  });
+
+  it("does nothing when the status is set to what it already was", () => {
+    expect(stockMovementForStatusChange("cancelled", "cancelled")).toBe("none");
+    expect(stockMovementForStatusChange("delivered", "delivered")).toBe("none");
+  });
+});
+
+describe("deletionRestoresStock", () => {
+  it("puts stock back for an order that was still holding it", () => {
+    expect(deletionRestoresStock("new")).toBe(true);
+    expect(deletionRestoresStock("processing")).toBe(true);
+    expect(deletionRestoresStock("ready_for_delivery")).toBe(true);
+    expect(deletionRestoresStock("out_for_delivery")).toBe(true);
+  });
+
+  it("does not credit a cancelled order's stock a second time", () => {
+    expect(deletionRestoresStock("cancelled")).toBe(false);
+  });
+
+  it("does not invent stock for goods that were already handed over", () => {
+    expect(deletionRestoresStock("delivered")).toBe(false);
   });
 });
